@@ -1,7 +1,7 @@
 # MGW-server
 
 ## 구조 예시
-```
+```text
 com.mgw.server.activity
 ├── domain
 │   ├── Activity.java               // 핵심 엔티티 및 비즈니스 로직 수행

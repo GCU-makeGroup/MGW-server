@@ -98,7 +98,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         WebRequest request
     ) {
 
-        log.error("JSON 파싱 에러: {}", e.getMessage());
+        log.warn("JSON 파싱 에러: {}", e.getMessage());
 
         String errorMessage = e.getMessage();
         String simplifiedMessage = "잘못된 요청 형식입니다";
@@ -113,7 +113,10 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
             }
         }
 
-        String detail = simplifiedMessage + " - " + e.getMostSpecificCause().getMessage();
+        // 프로덕션 환경에서는 상세 원인 메시지 숨김
+        String detail = isProductionProfile()
+                ? simplifiedMessage
+                : simplifiedMessage + " - " + e.getMostSpecificCause().getMessage();
         return buildResponse(e, CommonErrorCode.BAD_REQUEST, headers, request, detail);
     }
 

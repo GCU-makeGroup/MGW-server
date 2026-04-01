@@ -22,7 +22,7 @@ public class TestController {
         return "OK";
     }
 
-    @GetMapping("log-test")
+    @GetMapping("/log-test")
     public void logTest() {
         log.trace("TRACE");
         log.debug("DEBUG");
