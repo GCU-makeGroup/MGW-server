@@ -1,0 +1,104 @@
+CREATE TABLE Member(
+    id bigint PRIMARY KEY AUTO_INCREMENT,
+    email bigint NOT NULL,
+    name varchar(100) NOT NULL,
+    image_url text,
+    introduction text,
+    point int,
+    created_at datetime(6),
+    updated_at datetime(6),
+    deleted_at datetime(6)
+);
+
+CREATE TABLE Group(
+    id bigint PRIMARY KEY AUTO_INCREMENT,
+    title text NOT NULL,
+    content text NOT NULL,
+    is_public boolean DEFAULT FALSE,
+    created_at datetime(6),
+    updated_at datetime(6)
+);
+
+CREATE TABLE Activity(
+    id bigint PRIMARY KEY AUTO_INCREMENT,
+    title text NOT NULL,
+    subtitle text NOT NULL,
+    description text NOT NULL,
+    max_member int NOT NULL,
+    thumbnail_url text NOT NULL,
+    location varchar(255),
+    schedule datetime(6),
+    openchat_url varchar(255),
+    created_at datetime(6),
+    updated_at datetime(6)
+);
+
+CREATE TABLE Category(
+    id bigint PRIMARY KEY AUTO_INCREMENT,
+    name varchar(25)
+);
+
+CREATE TABLE Group_member(
+    id bigint PRIMARY KEY AUTO_INCREMENT,
+    member_id bigint references Member(id),
+    group_id bigint references Group(id)
+);
+
+CREATE TABLE Activity_like(
+    id bigint PRIMARY KEY AUTO_INCREMENT,
+    member_id bigint references Member(id),
+    activity_id bigint references Activity(id)
+);
+
+CREATE TABLE Activity_group(
+    id bigint PRIMARY KEY AUTO_INCREMENT,
+    activity_id bigint references activity(id),
+    group_id bigint references group(id),
+    status enum('PENDING', 'JOIN', 'REJECTED', 'CANCEL'),
+    created_at datetime(6),
+    updated_at datetime(6)
+);
+
+
+CREATE TABLE Recruitment_group(
+    id bigint PRIMARY KEY AUTO_INCREMENT,
+    group_id bigint REFERENCES group(id),
+    title text NOT NULL,
+    content text NOT NULL,
+    image_url text NOT NULL,
+    created_at datetime(6),
+    updated_at datetime(6)
+);
+
+CREATE TABLE Comment(
+    id bigint PRIMARY KEY AUTO_INCREMENT,
+    recruitment_group_id bigint REFERENCES group(id),
+    root_id bigint REFERENCES  Recruitment_group(id),
+    content text NOT NULL,
+    created_at datetime(6),
+    updated_at datetime(6)
+);
+
+CREATE TABLE Group_category(
+    id bigint PRIMARY KEY AUTO_INCREMENT,
+    category_id bigint references Category(id),
+    group_id bigint references Group(id)
+);
+
+CREATE TABLE Activity_category(
+    id bigint PRIMARY KEY AUTO_INCREMENT,
+    activity_id bigint references Activity(id),
+    group_id bigint references Group(id)
+);
+
+CREATE TABLE Member_setting(
+    id bigint PRIMARY KEY AUTO_INCREMENT,
+    member_id bigint references Member(id),
+    language ENUM('kor', 'en', 'ch', 'jp') default 'en',
+    dark_mode boolean default false,
+    message_notification boolean default true,
+    group_invite_notification boolean default true,
+    post_comment_notification boolean default true,
+    created_at datetime(6),
+    updated_at datetime(6)
+)

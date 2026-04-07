@@ -1,4 +1,4 @@
-package com.awp.mgw.group.domain;
+package com.awp.mgw.activity.domain;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -15,8 +15,8 @@ import java.time.LocalDateTime;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "group")
-public class Group {
+@Table(name = "activity")
+public class Activity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -26,10 +26,24 @@ public class Group {
     private String title;
 
     @Column(nullable = false, columnDefinition = "TEXT")
-    private String content;
+    private String subtitle;
 
-    @Column(name = "is_public", nullable = false)
-    private Boolean isPublic;
+    @Column(nullable = false, columnDefinition = "TEXT")
+    private String description;
+
+    @Column(name = "max_member", nullable = false)
+    private Integer maxMember;
+
+    @Column(name = "thumbnail_url", nullable = false, columnDefinition = "TEXT")
+    private String thumbnailUrl;
+
+    private String location;
+
+    @Column(name = "schedule")
+    private LocalDateTime scheduleAt;
+
+    @Column(name = "openchat_url")
+    private String openchatUrl;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;

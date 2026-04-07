@@ -15,12 +15,15 @@ import java.time.LocalDateTime;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "group")
-public class Group {
+@Table(name = "recruitment_group")
+public class RecruitmentGroup {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(name = "group_id", nullable = false)
+    private Long groupId;
 
     @Column(nullable = false, columnDefinition = "TEXT")
     private String title;
@@ -28,8 +31,8 @@ public class Group {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
 
-    @Column(name = "is_public", nullable = false)
-    private Boolean isPublic;
+    @Column(name = "image_url", nullable = false, columnDefinition = "TEXT")
+    private String imageUrl;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;

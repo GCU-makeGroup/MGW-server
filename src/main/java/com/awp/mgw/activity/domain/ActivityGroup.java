@@ -1,7 +1,9 @@
-package com.awp.mgw.group.domain;
+package com.awp.mgw.activity.domain;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -15,21 +17,22 @@ import java.time.LocalDateTime;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "group")
-public class Group {
+@Table(name = "activity_group")
+public class ActivityGroup {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, columnDefinition = "TEXT")
-    private String title;
+    @Column(name = "activity_id", nullable = false)
+    private Long activityId;
 
-    @Column(nullable = false, columnDefinition = "TEXT")
-    private String content;
+    @Column(name = "group_id", nullable = false)
+    private Long groupId;
 
-    @Column(name = "is_public", nullable = false)
-    private Boolean isPublic;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private ActivityGroupStatus status;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;

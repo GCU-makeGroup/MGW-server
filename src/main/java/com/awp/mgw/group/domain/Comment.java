@@ -15,21 +15,21 @@ import java.time.LocalDateTime;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "group")
-public class Group {
+@Table(name = "comment")
+public class Comment {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, columnDefinition = "TEXT")
-    private String title;
+    @Column(name = "recruitment_group_id", nullable = false)
+    private Long recruitmentGroupId;
+
+    @Column(name = "root_id")
+    private Long rootId;
 
     @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
-
-    @Column(name = "is_public", nullable = false)
-    private Boolean isPublic;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
