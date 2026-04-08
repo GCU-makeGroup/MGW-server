@@ -140,7 +140,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         log.warn("[BUSINESS EXCEPTION] domain={}, code={}, message={}", e.getDomain(), e.getBaseCode().getCode(),
             e.getMessage(), e);
 
-        return buildResponse(e, e.getBaseCode(), HttpHeaders.EMPTY, request, e.getMessage());
+        return buildResponse(e, e.getBaseCode(), HttpHeaders.EMPTY, request, null);
     }
 
     /**
