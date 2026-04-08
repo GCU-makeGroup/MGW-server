@@ -37,9 +37,12 @@ dependencies {
     // Q-Class
     annotationProcessor("com.querydsl:querydsl-apt:5.0.0:jakarta")
 
-    //Jakarta
+    // Jakarta
     annotationProcessor("jakarta.annotation:jakarta.annotation-api")
     annotationProcessor("jakarta.persistence:jakarta.persistence-api")
+
+    // MySQL
+    runtimeOnly("com.mysql:mysql-connector-j")
 }
 
 // Q-Class가 생성될 경로 지정 (기본적으로 build 폴더 아래에 생깁니다)
