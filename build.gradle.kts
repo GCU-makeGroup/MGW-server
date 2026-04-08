@@ -55,7 +55,7 @@ sourceSets {
 }
 
 // 컴파일 태스크 설정
-tasks.withType<JavaCompile> {
+tasks.named<JavaCompile>("compileJava") {
     options.generatedSourceOutputDirectory.set(querydslDir)
 }
 
