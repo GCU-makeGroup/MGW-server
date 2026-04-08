@@ -95,7 +95,7 @@ public class Member extends BaseEntity {
     }
 
     /**
-     *  해당 회원의 모든 그룹 모집글, 댓글 지움
+     *  해당 회원의 모든 그룹 모집글, 댓글 참조 해제
       */
     public void detachRetainedReferences() {
         recruitmentGroups.forEach(RecruitmentGroup::detachMember);

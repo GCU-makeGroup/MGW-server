@@ -19,7 +19,7 @@ public enum MemberErrorCode implements BaseCode {
     INVALID_MEMBER_STATUS(HttpStatus.BAD_REQUEST, "MEMBER-007", "회원 상태가 유효하지 않습니다."),
 
     DUPLICATE_MEMBER_EMAIL(HttpStatus.CONFLICT, "MEMBER-008", "이미 가입된 이메일입니다."),
-    MEMBER_SETTING_NOT_FOUND(HttpStatus.BAD_REQUEST, "MEMBER-009", "회원 설정 정보를 찾을 수 없습니다."),
+    MEMBER_SETTING_NOT_FOUND(HttpStatus.NOT_FOUND, "MEMBER-009", "회원 설정 정보를 찾을 수 없습니다."),
     ;
     private final HttpStatus httpStatus;
     private final String code;

@@ -1,6 +1,8 @@
 package com.awp.mgw.group.domain;
 
 import com.awp.mgw.common.BaseEntity;
+import com.awp.mgw.group.domain.exception.GroupDomainException;
+import com.awp.mgw.group.domain.exception.GroupErrorCode;
 import com.awp.mgw.recruitmentgroup.domain.RecruitmentGroup;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -55,6 +57,14 @@ public class Group extends BaseEntity {
     }
 
     public static Group create(String title, String content, Boolean isPublic) {
+        if (title == null || title.isBlank()) {
+            throw new GroupDomainException(GroupErrorCode.INVALID_GROUP_TITLE);
+        }
+
+        if (content == null || content.isBlank()) {
+            throw new GroupDomainException(GroupErrorCode.INVALID_GROUP_CONTENT);
+        }
+
         return Group.builder()
             .title(title)
             .content(content)
