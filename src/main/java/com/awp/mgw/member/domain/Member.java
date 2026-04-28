@@ -2,9 +2,9 @@ package com.awp.mgw.member.domain;
 
 import com.awp.mgw.activity.domain.ActivityLike;
 import com.awp.mgw.common.BaseEntity;
+import com.awp.mgw.group.domain.Comment;
+import com.awp.mgw.group.domain.Group;
 import com.awp.mgw.group.domain.GroupMember;
-import com.awp.mgw.recruitmentgroup.domain.Comment;
-import com.awp.mgw.recruitmentgroup.domain.RecruitmentGroup;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -57,7 +57,7 @@ public class Member extends BaseEntity {
     private List<MemberSetting> memberSettings = new ArrayList<>();
 
     @OneToMany(mappedBy = "member")
-    private List<RecruitmentGroup> recruitmentGroups = new ArrayList<>();
+    private List<Group> groups = new ArrayList<>();
 
     @OneToMany(mappedBy = "member")
     private List<Comment> comments = new ArrayList<>();
@@ -65,7 +65,7 @@ public class Member extends BaseEntity {
     @Builder(access = AccessLevel.PRIVATE)
     private Member(String email, String name, String imageUrl, String introduction, Integer point, Instant deletedAt,
                    List<GroupMember> groupMembers, List<ActivityLike> activityLikes, List<MemberSetting> memberSettings,
-                   List<RecruitmentGroup> recruitmentGroups, List<Comment> comments) {
+                   List<Group> groups, List<Comment> comments) {
         this.email = email;
         this.name = name;
         this.imageUrl = imageUrl;
@@ -75,7 +75,7 @@ public class Member extends BaseEntity {
         this.groupMembers = groupMembers;
         this.activityLikes = activityLikes;
         this.memberSettings = memberSettings;
-        this.recruitmentGroups = recruitmentGroups;
+        this.groups = groups;
         this.comments = comments;
     }
 
@@ -89,7 +89,7 @@ public class Member extends BaseEntity {
             .groupMembers(new ArrayList<>())
             .activityLikes(new ArrayList<>())
             .memberSettings(new ArrayList<>())
-            .recruitmentGroups(new ArrayList<>())
+            .groups(new ArrayList<>())
             .comments(new ArrayList<>())
             .build();
     }
@@ -98,7 +98,7 @@ public class Member extends BaseEntity {
      *  해당 회원의 모든 그룹 모집글, 댓글 참조 해제
       */
     public void detachRetainedReferences() {
-        recruitmentGroups.forEach(RecruitmentGroup::detachMember);
+        groups.forEach(Group::detachMember);
         comments.forEach(Comment::detachMember);
     }
 }

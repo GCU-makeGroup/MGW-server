@@ -1,7 +1,6 @@
-package com.awp.mgw.recruitmentgroup.domain;
+package com.awp.mgw.group.domain;
 
 import com.awp.mgw.common.BaseEntity;
-import com.awp.mgw.group.domain.Group;
 import com.awp.mgw.member.domain.Member;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -15,6 +14,8 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,8 +23,8 @@ import java.util.List;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "recruitment_group")
-public class RecruitmentGroup extends BaseEntity {
+@Table(name = "comment")
+public class Comment extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
@@ -35,39 +36,35 @@ public class RecruitmentGroup extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id", nullable = true)
+    @OnDelete(action = OnDeleteAction.SET_NULL)
     private Member member;
 
-    @Column(name = "title", nullable = false, length = 255)
-    private String title;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_id")
+    private Comment parent;
 
     @Column(name = "content", nullable = false, columnDefinition = "TEXT")
     private String content;
 
-    @Column(name = "image_url", nullable = false, columnDefinition = "TEXT")
-    private String imageUrl;
-
-    @OneToMany(mappedBy = "recruitmentGroup", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Comment> comments = new ArrayList<>();
+    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Comment> children = new ArrayList<>();
 
     @Builder(access = AccessLevel.PRIVATE)
-    private RecruitmentGroup(Group group, Member member, String title, String content, String imageUrl,
-                             List<Comment> comments) {
+    private Comment(Group group, Member member, Comment parent, String content, List<Comment> children) {
         this.group = group;
         this.member = member;
-        this.title = title;
+        this.parent = parent;
         this.content = content;
-        this.imageUrl = imageUrl;
-        this.comments = comments;
+        this.children = children;
     }
 
-    public static RecruitmentGroup create(Group group, Member member, String title, String content, String imageUrl) {
-        return RecruitmentGroup.builder()
+    public static Comment create(Group group, Member member, Comment parent, String content) {
+        return Comment.builder()
             .group(group)
             .member(member)
-            .title(title)
+            .parent(parent)
             .content(content)
-            .imageUrl(imageUrl)
-            .comments(new ArrayList<>())
+            .children(new ArrayList<>())
             .build();
     }
 

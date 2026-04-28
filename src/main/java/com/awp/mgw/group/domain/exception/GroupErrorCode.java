@@ -14,11 +14,17 @@ public enum GroupErrorCode implements BaseCode {
     INVALID_GROUP_TITLE(HttpStatus.BAD_REQUEST, "GROUP-002", "그룹 제목이 유효하지 않습니다."),
     INVALID_GROUP_CONTENT(HttpStatus.BAD_REQUEST, "GROUP-003", "그룹 소개가 유효하지 않습니다."),
     INVALID_GROUP_PUBLIC_STATUS(HttpStatus.BAD_REQUEST, "GROUP-004", "그룹 공개 여부가 유효하지 않습니다."),
+    INVALID_GROUP_IMAGE_URL(HttpStatus.BAD_REQUEST, "GROUP-005", "그룹 이미지 URL이 유효하지 않습니다."),
+    INVALID_GROUP_CAPACITY(HttpStatus.BAD_REQUEST, "GROUP-006", "그룹 최대 인원 수가 유효하지 않습니다."),
 
-    GROUP_MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "GROUP-005", "그룹 멤버 정보를 찾을 수 없습니다."),
-    GROUP_CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "GROUP-006", "그룹 카테고리 정보를 찾을 수 없습니다."),
-    MEMBER_ALREADY_JOINED_GROUP(HttpStatus.CONFLICT, "GROUP-007", "이미 그룹에 가입한 사용자입니다."),
-    GROUP_NOT_OWNED(HttpStatus.FORBIDDEN, "GROUP-008", "본인의 그룹만 수정/삭제할 수 있습니다."),
+    GROUP_MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "GROUP-007", "그룹 멤버 정보를 찾을 수 없습니다."),
+    GROUP_CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "GROUP-008", "그룹 카테고리 정보를 찾을 수 없습니다."),
+    COMMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "GROUP-009", "댓글을 찾을 수 없습니다."),
+    MEMBER_ALREADY_JOINED_GROUP(HttpStatus.CONFLICT, "GROUP-010", "이미 그룹에 가입한 사용자입니다."),
+    GROUP_NOT_OWNED(HttpStatus.FORBIDDEN, "GROUP-011", "본인의 그룹만 수정/삭제할 수 있습니다."),
+    COMMENT_NOT_OWNED(HttpStatus.FORBIDDEN, "GROUP-012", "본인의 댓글만 수정/삭제할 수 있습니다."),
+    INVALID_COMMENT_CONTENT(HttpStatus.BAD_REQUEST, "GROUP-013", "댓글 내용이 유효하지 않습니다."),
+    INVALID_COMMENT_PARENT(HttpStatus.BAD_REQUEST, "GROUP-014", "부모 댓글 정보가 유효하지 않습니다."),
     ;
     private final HttpStatus httpStatus;
     private final String code;
