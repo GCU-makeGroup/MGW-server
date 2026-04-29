@@ -12,6 +12,5 @@ public enum Domain {
     MEMBER,
     GROUP,
     ACTIVITY,
-    CATEGORY,
-    RECRUITMENT_GROUP
+    CATEGORY
 }
