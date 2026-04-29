@@ -81,7 +81,7 @@ public class Group extends BaseEntity {
 
     public static Group create(String name, String title, String content, Member member, String imageUrl, Boolean isPublic,
                                Integer capacity) {
-        if (name == null || name.isBlank()) {
+        if (name == null || name.isBlank() || name.length() > 50) {
             throw new GroupDomainException(GroupErrorCode.INVALID_GROUP_NAME);
         }
 
