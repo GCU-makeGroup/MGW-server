@@ -93,11 +93,11 @@ public class Group extends BaseEntity {
             throw new GroupDomainException(GroupErrorCode.INVALID_GROUP_CONTENT);
         }
 
-        if (imageUrl == null || imageUrl.isBlank()) {
+        if (imageUrl != null && imageUrl.isBlank()) {
             throw new GroupDomainException(GroupErrorCode.INVALID_GROUP_IMAGE_URL);
         }
 
-        if (capacity == null || capacity < 1) {
+        if (capacity == null || capacity < 1 || capacity > 20) {
             throw new GroupDomainException(GroupErrorCode.INVALID_GROUP_CAPACITY);
         }
 
