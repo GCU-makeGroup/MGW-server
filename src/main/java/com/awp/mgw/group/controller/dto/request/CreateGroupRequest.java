@@ -27,6 +27,10 @@ public record CreateGroupRequest(
     Integer capacity,
 
     @NotEmpty(message = "그룹 카테고리는 최소 1개 이상이어야 합니다.")
-    List<Long> categoryIds
+    List<
+            @NotNull(message = "카테고리 ID는 필수입니다.")
+            @Min(value = 1, message = "카테고리 ID는 1 이상이어야 합니다.")
+                    Long
+            > categoryIds
 ) {
 }

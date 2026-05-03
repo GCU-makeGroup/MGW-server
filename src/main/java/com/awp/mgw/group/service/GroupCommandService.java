@@ -69,7 +69,7 @@ public class GroupCommandService implements CreateGroupUseCase {
      * 그룹 정원 유효성 검증
      */
     private void validateCapacity(Integer capacity) {
-        if (capacity == null || capacity < 1) {
+        if (capacity == null || capacity < 1 || capacity > 20) {
             throw new GroupDomainException(GroupErrorCode.INVALID_GROUP_CAPACITY);
         }
     }

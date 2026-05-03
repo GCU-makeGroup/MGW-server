@@ -116,7 +116,7 @@ public class Group extends BaseEntity {
     }
 
     public void validateCapacityChange(Integer capacity) {
-        if (capacity == null || capacity < 1) {
+        if (capacity == null || capacity < 1 || capacity > 20) {
             throw new GroupDomainException(GroupErrorCode.INVALID_GROUP_CAPACITY);
         }
 
