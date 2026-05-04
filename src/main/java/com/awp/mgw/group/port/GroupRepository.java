@@ -8,6 +8,4 @@ import org.springframework.data.jpa.repository.JpaRepository;
  */
 public interface GroupRepository extends JpaRepository<Group, Long> {
 
-    // 기본적으로 제공되는 save(), findById(), deleteById() 등을 그대로 사용합니다.
-
 }
