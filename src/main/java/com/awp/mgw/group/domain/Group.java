@@ -136,7 +136,7 @@ public class Group extends BaseEntity {
     }
 
     private static void validateTitle(String title) {
-        if (title == null || title.isBlank()) {
+        if (title == null || title.isBlank() || title.length() > 255) {
             throw new GroupDomainException(GroupErrorCode.INVALID_GROUP_TITLE);
         }
     }
