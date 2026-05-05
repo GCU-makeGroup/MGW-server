@@ -15,6 +15,7 @@ import com.awp.mgw.group.port.GroupCategoryRepository;
 import com.awp.mgw.group.port.GroupMemberRepository;
 import com.awp.mgw.group.port.GroupRepository;
 import com.awp.mgw.group.usecase.CreateGroupUseCase;
+import com.awp.mgw.group.usecase.UpdateGroupUseCase;
 import com.awp.mgw.member.domain.Member;
 import com.awp.mgw.member.domain.exception.MemberDomainException;
 import com.awp.mgw.member.domain.exception.MemberErrorCode;
@@ -28,7 +29,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Transactional
-public class GroupCommandService implements CreateGroupUseCase {
+public class GroupCommandService implements CreateGroupUseCase, UpdateGroupUseCase {
 
     private final GroupRepository groupRepository;
     private final GroupMemberRepository groupMemberRepository;
@@ -65,6 +66,30 @@ public class GroupCommandService implements CreateGroupUseCase {
         return CreateGroupResponse.from(savedGroup.getId());
     }
 
+    @Override
+    public CreateGroupResponse updateGroup(Long memberId, Long groupId, CreateGroupRequest request) {
+        Member member = getMemberOrThrow(memberId);
+        Group group = getOwnedGroupOrThrow(groupId, member.getId());
+        List<Category> categories = getCategoriesOrThrow(request.categoryIds());
+
+        group.updateGroup(
+            request.name(),
+            request.title(),
+            request.content(),
+            request.imageUrl(),
+            request.isPublic(),
+            request.capacity()
+        );
+
+        // 원래 존재하던 그룹 카테고리 삭제 후 수정한 그룹 카테고리 생성
+        groupCategoryRepository.deleteAllByGroup(group);
+        categories.forEach(category ->
+            groupCategoryRepository.save(GroupCategory.create(category, group))
+        );
+
+        return CreateGroupResponse.from(group.getId());
+    }
+
     /**
      * 그룹 정원 유효성 검증
      */
@@ -80,6 +105,17 @@ public class GroupCommandService implements CreateGroupUseCase {
     private Member getMemberOrThrow(Long memberId) {
         return memberRepository.findById(memberId)
                 .orElseThrow(() -> new MemberDomainException(MemberErrorCode.MEMBER_NOT_FOUND));
+    }
+
+    private Group getOwnedGroupOrThrow(Long groupId, Long memberId) {
+        Group group = groupRepository.findById(groupId)
+            .orElseThrow(() -> new GroupDomainException(GroupErrorCode.GROUP_NOT_FOUND));
+
+        if (group.getMember() == null || !group.getMember().getId().equals(memberId)) {
+            throw new GroupDomainException(GroupErrorCode.GROUP_NOT_OWNED);
+        }
+
+        return group;
     }
 
     private List<Category> getCategoriesOrThrow(List<Long> categoryIds) {
