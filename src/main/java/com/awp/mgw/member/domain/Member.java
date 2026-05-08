@@ -66,10 +66,11 @@ public class Member extends BaseEntity {
     private List<Comment> comments = new ArrayList<>();
 
     @Builder(access = AccessLevel.PRIVATE)
-    private Member(String email, String name, String imageUrl, String introduction, Integer point, Instant deletedAt,
+    private Member(String email, String password, String name, String imageUrl, String introduction, Integer point, Instant deletedAt,
                    List<GroupMember> groupMembers, List<ActivityLike> activityLikes, List<MemberSetting> memberSettings,
                    List<Group> groups, List<Comment> comments) {
         this.email = email;
+        this.password = password;
         this.name = name;
         this.imageUrl = imageUrl;
         this.introduction = introduction;
