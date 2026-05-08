@@ -27,8 +27,7 @@ public class AuthCommandService implements SignupUseCase, LoginUseCase {
   @Transactional
   public SignupResponse signup(SignupRequest request) {
     if (memberRepository.existsByEmail(request.email())) {
-      throw new IllegalArgumentException("이미 가입된 이메일입니다.");
-    }
+      throw new MemberDomainException(MemberErrorCode.DUPLICATE_MEMBER_EMAIL);    }
 
     String encodedPassword = passwordEncoder.encode(request.password());
 
