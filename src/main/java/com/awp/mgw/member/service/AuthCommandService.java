@@ -8,6 +8,8 @@ import com.awp.mgw.member.domain.Member;
 import com.awp.mgw.member.port.MemberRepository;
 import com.awp.mgw.member.usecase.LoginUseCase;
 import com.awp.mgw.member.usecase.SignupUseCase;
+import com.awp.mgw.member.domain.exception.MemberDomainException;
+import com.awp.mgw.member.domain.exception.MemberErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -50,10 +52,11 @@ public class AuthCommandService implements SignupUseCase, LoginUseCase {
   @Override
   public LoginResponse login(LoginRequest request) {
     Member member = memberRepository.findByEmail(request.email())
-          .orElseThrow(() -> new IllegalArgumentException("이메일 또는 비밀번호가 올바르지 않습니다."));
+          .orElseThrow(() ->
+                new MemberDomainException(MemberErrorCode.INVALID_LOGIN_INFO));
 
     if (!passwordEncoder.matches(request.password(), member.getPassword())) {
-      throw new IllegalArgumentException("이메일 또는 비밀번호가 올바르지 않습니다.");
+      throw new MemberDomainException(MemberErrorCode.INVALID_LOGIN_INFO);
     }
 
     return new LoginResponse(
