@@ -82,19 +82,20 @@ public class Member extends BaseEntity {
         this.comments = comments;
     }
 
-    public static Member create(String email, String name, String imageUrl, String introduction) {
+    public static Member create(String email, String password, String name, String imageUrl, String introduction) {
         return Member.builder()
-            .email(email)
-            .name(name)
-            .imageUrl(imageUrl)
-            .introduction(introduction)
-            .point(0)
-            .groupMembers(new ArrayList<>())
-            .activityLikes(new ArrayList<>())
-            .memberSettings(new ArrayList<>())
-            .groups(new ArrayList<>())
-            .comments(new ArrayList<>())
-            .build();
+              .email(email)
+              .password(password)
+              .name(name)
+              .imageUrl(imageUrl)
+              .introduction(introduction)
+              .point(0)
+              .groupMembers(new ArrayList<>())
+              .activityLikes(new ArrayList<>())
+              .memberSettings(new ArrayList<>())
+              .groups(new ArrayList<>())
+              .comments(new ArrayList<>())
+              .build();
     }
 
     /**
