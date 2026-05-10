@@ -6,6 +6,10 @@ spring:
     username: root
     password: 1234
     driver-class-name: com.mysql.cj.jdbc.Driver
+  data:
+    web:
+      pageable:
+        one-indexed-parameters: true # 1-indexed
 
   jpa:
     hibernate:

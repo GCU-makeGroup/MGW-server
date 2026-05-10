@@ -81,25 +81,11 @@ public class Group extends BaseEntity {
 
     public static Group create(String name, String title, String content, Member member, String imageUrl, Boolean isPublic,
                                Integer capacity) {
-        if (name == null || name.isBlank() || name.length() > 50) {
-            throw new GroupDomainException(GroupErrorCode.INVALID_GROUP_NAME);
-        }
-
-        if (title == null || title.isBlank()) {
-            throw new GroupDomainException(GroupErrorCode.INVALID_GROUP_TITLE);
-        }
-
-        if (content == null || content.isBlank()) {
-            throw new GroupDomainException(GroupErrorCode.INVALID_GROUP_CONTENT);
-        }
-
-        if (imageUrl != null && imageUrl.isBlank()) {
-            throw new GroupDomainException(GroupErrorCode.INVALID_GROUP_IMAGE_URL);
-        }
-
-        if (capacity == null || capacity < 1 || capacity > 20) {
-            throw new GroupDomainException(GroupErrorCode.INVALID_GROUP_CAPACITY);
-        }
+        validateName(name);
+        validateTitle(title);
+        validateContent(content);
+        validateImageUrl(imageUrl);
+        validateCapacity(capacity);
 
         return Group.builder()
                 .name(name)
@@ -116,9 +102,7 @@ public class Group extends BaseEntity {
     }
 
     public void validateCapacityChange(Integer capacity) {
-        if (capacity == null || capacity < 1 || capacity > 20) {
-            throw new GroupDomainException(GroupErrorCode.INVALID_GROUP_CAPACITY);
-        }
+        validateCapacity(capacity);
 
         if (capacity < groupMembers.size()) {
             throw new GroupDomainException(GroupErrorCode.INVALID_GROUP_CAPACITY,
@@ -126,7 +110,52 @@ public class Group extends BaseEntity {
         }
     }
 
+    public void updateGroup(String name, String title, String content, String imageUrl, Boolean isPublic, Integer capacity) {
+        validateName(name);
+        validateTitle(title);
+        validateContent(content);
+        validateImageUrl(imageUrl);
+        validateCapacityChange(capacity);
+
+        this.name = name;
+        this.title = title;
+        this.content = content;
+        this.imageUrl = imageUrl;
+        this.isPublic = isPublic;
+        this.capacity = capacity;
+    }
+
     public void detachMember() {
         this.member = null;
+    }
+
+    private static void validateName(String name) {
+        if (name == null || name.isBlank() || name.length() > 50) {
+            throw new GroupDomainException(GroupErrorCode.INVALID_GROUP_NAME);
+        }
+    }
+
+    private static void validateTitle(String title) {
+        if (title == null || title.isBlank() || title.length() > 255) {
+            throw new GroupDomainException(GroupErrorCode.INVALID_GROUP_TITLE);
+        }
+    }
+
+    private static void validateContent(String content) {
+        if (content == null || content.isBlank()) {
+            throw new GroupDomainException(GroupErrorCode.INVALID_GROUP_CONTENT);
+        }
+    }
+
+    private static void validateImageUrl(String imageUrl) {
+        if (imageUrl != null && imageUrl.isBlank()) {
+            throw new GroupDomainException(GroupErrorCode.INVALID_GROUP_IMAGE_URL);
+        }
+    }
+
+    private static void validateCapacity(Integer capacity) {
+        if (capacity == null || capacity < 1 || capacity > 20) {
+            throw new GroupDomainException(GroupErrorCode.INVALID_GROUP_CAPACITY);
+        }
     }
 }
