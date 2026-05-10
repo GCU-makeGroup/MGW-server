@@ -24,6 +24,10 @@ public enum ActivityErrorCode implements BaseCode {
     ACTIVITY_CATEGORY_NOT_FOUND(HttpStatus.BAD_REQUEST, "ACTIVITY-011", "활동에 연결된 카테고리를 찾을 수 없습니다."),
     ACTIVITY_LIKE_NOT_FOUND(HttpStatus.BAD_REQUEST, "ACTIVITY-012", "활동 좋아요 정보를 찾을 수 없습니다."),
     INVALID_ACTIVITY_GROUP_STATUS(HttpStatus.BAD_REQUEST, "ACTIVITY-013", "활동 그룹 상태값이 유효하지 않습니다."),
+    FORBIDDEN_ACTIVITY_ACCESS(HttpStatus.FORBIDDEN, "ACTIVITY-014", "활동에 대한 권한이 없습니다."),
+    ACTIVITY_CAPACITY_EXCEEDED(HttpStatus.BAD_REQUEST, "ACTIVITY-015", "활동 정원이 가득 찼습니다."),
+    DUPLICATE_ACTIVITY_MEMBER_JOIN(HttpStatus.CONFLICT, "ACTIVITY-016", "이미 활동에 참여 중인 사용자입니다."),
+    DUPLICATE_ACTIVITY_GROUP_JOIN(HttpStatus.CONFLICT, "ACTIVITY-017", "이미 활동에 참여 중인 그룹입니다."),
     ;
     private final HttpStatus httpStatus;
     private final String code;
