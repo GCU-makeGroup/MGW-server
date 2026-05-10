@@ -1,6 +1,7 @@
 package com.awp.mgw.group.port;
 
 import com.awp.mgw.category.domain.Category;
+import com.awp.mgw.group.domain.Comment;
 import com.awp.mgw.group.domain.Group;
 import com.querydsl.core.Tuple;
 import com.querydsl.core.types.Order;
@@ -18,11 +19,14 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static com.awp.mgw.category.domain.QCategory.category;
+import static com.awp.mgw.group.domain.QComment.comment;
 import static com.awp.mgw.group.domain.QGroup.group;
 import static com.awp.mgw.group.domain.QGroupCategory.groupCategory;
 import static com.awp.mgw.group.domain.QGroupMember.groupMember;
+import static com.awp.mgw.member.domain.QMember.member;
 
 /**
  * 동적 쿼리를 위한 레포지토리
@@ -33,7 +37,7 @@ public class GroupQueryRepository {
 
     private final JPAQueryFactory queryFactory;
 
-    public Page<Group> findGroupList(List<Long> categoryIds, Pageable pageable) {
+    public Page<Group> findGroupList(Long memberId, List<Long> categoryIds, Pageable pageable) {
         OrderSpecifier<?>[] orderSpecifiers = toOrderSpecifiers(pageable.getSort());
 
         // 컬렉션 조인을 바로 페이징하지 않기 위해, 먼저 조건에 맞는 그룹 ID만 페이지 단위로 조회
@@ -41,7 +45,7 @@ public class GroupQueryRepository {
                 .select(group.id)
                 .from(group)
                 .leftJoin(group.groupCategories, groupCategory)
-                .where(categoryIdIn(categoryIds))
+                .where(accessibleGroup(memberId), categoryIdIn(categoryIds))
                 .groupBy(group.id)
                 .orderBy(orderSpecifiers)
                 .offset(pageable.getOffset())
@@ -53,7 +57,7 @@ public class GroupQueryRepository {
                 .select(group.id.countDistinct())
                 .from(group)
                 .leftJoin(group.groupCategories, groupCategory)
-                .where(categoryIdIn(categoryIds))
+                .where(accessibleGroup(memberId), categoryIdIn(categoryIds))
                 .fetchOne();
 
         if (groupIds.isEmpty()) {
@@ -64,11 +68,32 @@ public class GroupQueryRepository {
         List<Group> groups = queryFactory
                 .selectFrom(group)
                 .distinct()
-                .where(group.id.in(groupIds))
+                .where(group.id.in(groupIds), accessibleGroup(memberId))
                 .orderBy(orderSpecifiers)
                 .fetch();
 
         return new PageImpl<>(groups, pageable, total != null ? total : 0);
+    }
+
+    public Optional<Group> findAccessibleGroupDetailById(Long groupId, Long memberId) {
+        Group foundGroup = queryFactory
+                .selectFrom(group)
+                .leftJoin(group.member, member).fetchJoin()
+                .where(group.id.eq(groupId), accessibleGroup(memberId))
+                .fetchOne();
+
+        return Optional.ofNullable(foundGroup);
+    }
+
+    public List<Comment> findCommentsByGroupId(Long groupId) {
+        // 댓글 작성자를 fetch join해서 작성자 정보 접근 시 추가 쿼리가 나가지 않게 한다.
+        return queryFactory
+                .selectFrom(comment)
+                .leftJoin(comment.member, member).fetchJoin()
+                .leftJoin(comment.parent).fetchJoin()
+                .where(comment.group.id.eq(groupId))
+                .orderBy(comment.createdAt.asc(), comment.id.asc())
+                .fetch();
     }
 
     public Map<Long, List<Category>> findCategoriesByGroupIds(List<Long> groupIds) {
@@ -125,6 +150,11 @@ public class GroupQueryRepository {
         }
 
         return groupCategory.category.id.in(categoryIds);
+    }
+
+    private BooleanExpression accessibleGroup(Long memberId) {
+        return group.isPublic.isTrue()
+                .or(group.member.id.eq(memberId));
     }
 
     private OrderSpecifier<?>[] toOrderSpecifiers(Sort sort) {

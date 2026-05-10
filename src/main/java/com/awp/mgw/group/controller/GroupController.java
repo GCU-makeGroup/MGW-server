@@ -2,9 +2,11 @@ package com.awp.mgw.group.controller;
 
 import com.awp.mgw.group.controller.dto.request.CreateGroupRequest;
 import com.awp.mgw.group.controller.dto.response.CreateGroupResponse;
+import com.awp.mgw.group.controller.dto.response.GetGroupDetailResponse;
 import com.awp.mgw.group.controller.dto.response.GetGroupListResponse;
 import com.awp.mgw.group.usecase.command.CreateGroupUseCase;
 import com.awp.mgw.group.usecase.command.UpdateGroupUseCase;
+import com.awp.mgw.group.usecase.query.GetGroupDetailUseCase;
 import com.awp.mgw.group.usecase.query.GetGroupListUseCase;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -25,6 +27,7 @@ public class GroupController {
     private final CreateGroupUseCase createGroupUseCase;
     private final UpdateGroupUseCase updateGroupUseCase;
     private final GetGroupListUseCase getGroupListUseCase;
+    private final GetGroupDetailUseCase getGroupDetailUseCase;
 
     @PostMapping
     public CreateGroupResponse createGroup(
@@ -51,5 +54,13 @@ public class GroupController {
             @PageableDefault(size = 10, sort = "updatedAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
         return getGroupListUseCase.getGroupList(memberId, categoryIds, pageable);
+    }
+
+    @GetMapping("/{groupId}")
+    public GetGroupDetailResponse getGroupDetail(
+            @RequestParam Long memberId,
+            @PathVariable Long groupId
+    ) {
+        return getGroupDetailUseCase.getGroupDetail(memberId, groupId);
     }
 }
