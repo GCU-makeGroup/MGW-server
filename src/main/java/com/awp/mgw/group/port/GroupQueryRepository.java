@@ -173,6 +173,10 @@ public class GroupQueryRepository {
             });
         }
 
+        if (orderSpecifiers.isEmpty()) {
+            orderSpecifiers.add(group.updatedAt.desc());
+        }
+
         orderSpecifiers.add(group.id.desc());
         return orderSpecifiers.toArray(OrderSpecifier[]::new);
     }
