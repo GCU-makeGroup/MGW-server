@@ -44,6 +44,11 @@ dependencies {
 
     // MySQL
     runtimeOnly("com.mysql:mysql-connector-j")
+
+    // jwt token
+    implementation("io.jsonwebtoken:jjwt-api:0.11.5")
+    runtimeOnly("io.jsonwebtoken:jjwt-impl:0.11.5")
+    runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.11.5")
 }
 
 // Q-Class가 생성될 경로 지정 (기본적으로 build 폴더 아래에 생깁니다)

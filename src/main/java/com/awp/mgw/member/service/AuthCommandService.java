@@ -22,6 +22,7 @@ public class AuthCommandService implements SignupUseCase, LoginUseCase {
 
   private final MemberRepository memberRepository;
   private final PasswordEncoder passwordEncoder;
+  private final JwtTokenProvider jwtTokenProvider;
 
   @Override
   @Transactional
@@ -58,9 +59,19 @@ public class AuthCommandService implements SignupUseCase, LoginUseCase {
       throw new MemberDomainException(MemberErrorCode.INVALID_LOGIN_INFO);
     }
 
+    String accessToken = jwtTokenProvider.createAccessToken(
+          member.getId(),
+          member.getEmail()
+    );
+
+    String refreshToken = jwtTokenProvider.createRefreshToken(
+          member.getId(),
+          member.getEmail()
+    );
+
     return new LoginResponse(
-          "temporary-access-token",
-          "temporary-refresh-token",
+          accessToken,
+          refreshToken,
           member.getId(),
           member.getEmail(),
           member.getName()
