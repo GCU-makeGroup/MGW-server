@@ -26,6 +26,7 @@ public enum GroupErrorCode implements BaseCode {
     COMMENT_NOT_OWNED(HttpStatus.FORBIDDEN, "GROUP-013", "본인의 댓글만 수정/삭제할 수 있습니다."),
     INVALID_COMMENT_CONTENT(HttpStatus.BAD_REQUEST, "GROUP-014", "댓글 내용이 유효하지 않습니다."),
     INVALID_COMMENT_PARENT(HttpStatus.BAD_REQUEST, "GROUP-015", "부모 댓글 정보가 유효하지 않습니다."),
+    GROUP_OWNER_CANNOT_LEAVE(HttpStatus.BAD_REQUEST, "GROUP-016", "그룹 작성자는 팀원이 남아있으면 탈퇴할 수 없습니다."),
     ;
     private final HttpStatus httpStatus;
     private final String code;
