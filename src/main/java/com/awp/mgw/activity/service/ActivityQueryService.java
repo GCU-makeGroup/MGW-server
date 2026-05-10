@@ -28,25 +28,30 @@ public class ActivityQueryService implements GetActivityListUseCase, GetActivity
 
     @Override
     public ActivityListResponse getActivityList(Long memberId, String category, String scope, Long cursor) {
+        validateScopeMemberId(scope, memberId);
+
+        ActivityQueryRepository.ActivitySummaryRow hotpickRow = activityQueryRepository.findTopHotpick(memberId, null);
+        Long hotpickId = hotpickRow == null ? null : hotpickRow.id();
+        ActivitySummaryResponse hotpick = mapSummary(hotpickRow, hotpickId);
+
+        if ("hotpick".equalsIgnoreCase(scope)) {
+            List<ActivitySummaryResponse> onlyHotpick = hotpick == null ? List.of() : List.of(hotpick);
+            return new ActivityListResponse(hotpick, onlyHotpick, null);
+        }
+
         List<ActivityQueryRepository.ActivitySummaryRow> rows =
             activityQueryRepository.findActivitySummaries(memberId, category, scope, cursor, PAGE_SIZE + 1);
 
         boolean hasNext = rows.size() > PAGE_SIZE;
         List<ActivityQueryRepository.ActivitySummaryRow> pagedRows = hasNext ? rows.subList(0, PAGE_SIZE) : rows;
 
-        ActivitySummaryResponse hotpick = null;
-        if (scope == null || scope.isBlank()) {
-            ActivityQueryRepository.ActivitySummaryRow hotpickRow = activityQueryRepository.findTopHotpick(memberId, category);
-            hotpick = mapSummary(hotpickRow, hotpickRow != null ? hotpickRow.id() : null);
-        }
-
-        Long hotpickId = hotpick == null ? null : hotpick.id();
         List<ActivitySummaryResponse> activities = pagedRows.stream()
             .map(row -> mapSummary(row, hotpickId))
             .toList();
 
         String nextCursor = hasNext ? String.valueOf(pagedRows.get(pagedRows.size() - 1).id()) : null;
-        return new ActivityListResponse(hotpick, activities, nextCursor);
+        ActivitySummaryResponse responseHotpick = (scope == null || scope.isBlank()) ? hotpick : null;
+        return new ActivityListResponse(responseHotpick, activities, nextCursor);
     }
 
     @Override
@@ -62,6 +67,7 @@ public class ActivityQueryService implements GetActivityListUseCase, GetActivity
         ActivityQueryRepository.ActivitySummaryRow hotpickRow = activityQueryRepository.findTopHotpick(memberId, null);
         Long hotpickId = hotpickRow == null ? null : hotpickRow.id();
         boolean isHotpick = hotpickId != null && hotpickId.equals(activityId);
+        boolean canViewOpenChat = memberId != null && activityQueryRepository.existsJoinedMember(activityId, memberId);
 
         List<ActivityDetailResponse.ActivityMemberResponse> members = activityQueryRepository.findParticipants(activityId).stream()
             .map(participant -> new ActivityDetailResponse.ActivityMemberResponse(
@@ -84,8 +90,18 @@ public class ActivityQueryService implements GetActivityListUseCase, GetActivity
             isHotpick,
             activity.getDescription(),
             members,
-            activity.getOpenchatUrl()
+            canViewOpenChat ? activity.getOpenchatUrl() : null
         );
+    }
+
+    private void validateScopeMemberId(String scope, Long memberId) {
+        if (scope == null || scope.isBlank()) {
+            return;
+        }
+
+        if (("joined".equalsIgnoreCase(scope) || "created".equalsIgnoreCase(scope)) && memberId == null) {
+            throw new ActivityDomainException(ActivityErrorCode.MEMBER_ID_REQUIRED_FOR_SCOPE);
+        }
     }
 
     private ActivitySummaryResponse mapSummary(ActivityQueryRepository.ActivitySummaryRow row, Long hotpickId) {

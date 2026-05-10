@@ -28,6 +28,7 @@ public enum ActivityErrorCode implements BaseCode {
     ACTIVITY_CAPACITY_EXCEEDED(HttpStatus.BAD_REQUEST, "ACTIVITY-015", "활동 정원이 가득 찼습니다."),
     DUPLICATE_ACTIVITY_MEMBER_JOIN(HttpStatus.CONFLICT, "ACTIVITY-016", "이미 활동에 참여 중인 사용자입니다."),
     DUPLICATE_ACTIVITY_GROUP_JOIN(HttpStatus.CONFLICT, "ACTIVITY-017", "이미 활동에 참여 중인 그룹입니다."),
+    MEMBER_ID_REQUIRED_FOR_SCOPE(HttpStatus.BAD_REQUEST, "ACTIVITY-018", "joined/created 조회에는 memberId가 필요합니다."),
     ;
     private final HttpStatus httpStatus;
     private final String code;

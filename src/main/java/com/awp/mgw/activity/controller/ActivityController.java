@@ -81,7 +81,7 @@ public class ActivityController {
     @GetMapping("/{activityId}/details")
     @Operation(summary = "활동 상세 조회", description = "활동 상세 정보를 조회합니다.")
     public ActivityDetailResponse getActivityDetail(
-        @RequestParam(required = false) Long memberId,
+        @RequestParam Long memberId,
         @PathVariable Long activityId
     ) {
         return getActivityDetailUseCase.getActivityDetail(memberId, activityId);

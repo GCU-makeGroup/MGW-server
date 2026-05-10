@@ -11,7 +11,6 @@ import com.awp.mgw.group.domain.QGroup;
 import com.awp.mgw.group.domain.QGroupMember;
 import com.awp.mgw.member.domain.QMember;
 import com.querydsl.core.types.Expression;
-import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.Expressions;
@@ -22,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import java.time.Instant;
+import java.util.Collection;
 import java.util.List;
 
 @Repository
@@ -60,7 +60,7 @@ public class ActivityQueryRepository {
                 categoryFilter(categoryName),
                 scopeFilter(scope, memberId)
             )
-            .orderBy(orderByScope(scope))
+            .orderBy(activity.id.desc())
             .limit(size)
             .fetch();
     }
@@ -158,6 +158,22 @@ public class ActivityQueryRepository {
         return exists != null;
     }
 
+    public boolean existsMemberInActivityByStatuses(Long activityId, Long memberId, Collection<ActivityGroupStatus> statuses) {
+        Integer exists = queryFactory
+            .selectOne()
+            .from(activityGroup)
+            .join(activityGroup.group, group)
+            .join(group.groupMembers, groupMember)
+            .where(
+                activityGroup.activity.id.eq(activityId),
+                activityGroup.status.in(statuses),
+                groupMember.member.id.eq(memberId)
+            )
+            .fetchFirst();
+
+        return exists != null;
+    }
+
     public boolean existsMemberInGroup(Long groupId, Long memberId) {
         Integer exists = queryFactory
             .selectOne()
@@ -197,12 +213,36 @@ public class ActivityQueryRepository {
             .fetchFirst();
     }
 
-    private OrderSpecifier<?>[] orderByScope(String scope) {
-        if ("hotpick".equalsIgnoreCase(scope)) {
-            return new OrderSpecifier[]{scoreExpression(activity.id).desc(), activity.id.desc()};
-        }
+    public long countGroupMembers(Long groupId) {
+        Long count = queryFactory
+            .select(groupMember.member.id.countDistinct())
+            .from(groupMember)
+            .where(groupMember.group.id.eq(groupId))
+            .fetchOne();
 
-        return new OrderSpecifier[]{activity.id.desc()};
+        return count == null ? 0L : count;
+    }
+
+    public long countAlreadyJoinedMembersFromGroup(Long activityId, Long groupId) {
+        QGroupMember joinTargetMembers = new QGroupMember("joinTargetMembers");
+
+        Long count = queryFactory
+            .select(groupMember.member.id.countDistinct())
+            .from(activityGroup)
+            .join(activityGroup.group, group)
+            .join(group.groupMembers, groupMember)
+            .where(
+                activityGroup.activity.id.eq(activityId),
+                activityGroup.status.eq(ActivityGroupStatus.JOIN),
+                groupMember.member.id.in(
+                    JPAExpressions.select(joinTargetMembers.member.id)
+                        .from(joinTargetMembers)
+                        .where(joinTargetMembers.group.id.eq(groupId))
+                )
+            )
+            .fetchOne();
+
+        return count == null ? 0L : count;
     }
 
     private BooleanExpression cursorLt(Long cursor) {
@@ -253,10 +293,20 @@ public class ActivityQueryRepository {
     }
 
     private Expression<String> categoryNameExpression() {
-        return JPAExpressions.select(category.name.min())
-            .from(activityCategory)
-            .join(activityCategory.category, category)
-            .where(activityCategory.activity.id.eq(activity.id));
+        QActivityCategory categoryPick = new QActivityCategory("categoryPick");
+        QActivityCategory categoryMin = new QActivityCategory("categoryMin");
+        QCategory categoryPickCategory = new QCategory("categoryPickCategory");
+
+        return JPAExpressions.select(categoryPickCategory.name)
+            .from(categoryPick)
+            .join(categoryPick.category, categoryPickCategory)
+            .where(
+                categoryPick.id.eq(
+                    JPAExpressions.select(categoryMin.id.min())
+                        .from(categoryMin)
+                        .where(categoryMin.activity.id.eq(activity.id))
+                )
+            );
     }
 
     private NumberExpression<Long> currentParticipantCountExpression(Expression<Long> activityIdExpression) {

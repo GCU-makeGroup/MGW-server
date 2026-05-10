@@ -31,6 +31,7 @@ import com.awp.mgw.member.domain.exception.MemberDomainException;
 import com.awp.mgw.member.domain.exception.MemberErrorCode;
 import com.awp.mgw.member.port.MemberRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -106,17 +107,18 @@ public class ActivityCommandService implements CreateActivityUseCase, UpdateActi
     @Override
     public ActivityIdResponse joinActivity(Long memberId, Long activityId, JoinActivityRequest request) {
         Member member = getMemberOrThrow(memberId);
-        Activity activity = getActivityOrThrow(activityId);
-
-        validateCapacity(activity);
-        if (activityQueryRepository.existsJoinedMember(activityId, memberId)) {
-            throw new ActivityDomainException(ActivityErrorCode.DUPLICATE_ACTIVITY_MEMBER_JOIN);
-        }
-
         Group targetGroup = resolveJoinGroup(member, request);
-        validateGroupJoinDuplication(activity, targetGroup);
+        Activity activity = getActivityForUpdateOrThrow(activityId);
 
-        activityGroupRepository.save(ActivityGroup.create(activity, targetGroup, ActivityGroupStatus.JOIN));
+        validateGroupJoinDuplication(activity, targetGroup);
+        validateMemberJoinDuplication(activityId, memberId, targetGroup.getId());
+        validateCapacity(activity, targetGroup.getId());
+
+        try {
+            activityGroupRepository.save(ActivityGroup.create(activity, targetGroup, ActivityGroupStatus.JOIN));
+        } catch (DataIntegrityViolationException e) {
+            throw new ActivityDomainException(ActivityErrorCode.DUPLICATE_ACTIVITY_GROUP_JOIN);
+        }
         return ActivityIdResponse.from(activity.getId());
     }
 
@@ -138,6 +140,11 @@ public class ActivityCommandService implements CreateActivityUseCase, UpdateActi
         Activity activity = activityRepository.findById(activityId)
             .orElseThrow(() -> new ActivityDomainException(ActivityErrorCode.ACTIVITY_NOT_FOUND));
         return activity;
+    }
+
+    private Activity getActivityForUpdateOrThrow(Long activityId) {
+        return activityRepository.findByIdForUpdate(activityId)
+            .orElseThrow(() -> new ActivityDomainException(ActivityErrorCode.ACTIVITY_NOT_FOUND));
     }
 
     private void saveActivityCategories(Activity activity, List<Long> categoryIds) {
@@ -180,9 +187,13 @@ public class ActivityCommandService implements CreateActivityUseCase, UpdateActi
         return categories;
     }
 
-    private void validateCapacity(Activity activity) {
+    private void validateCapacity(Activity activity, Long groupId) {
         long currentParticipants = activityQueryRepository.countJoinedParticipants(activity.getId());
-        if (currentParticipants >= activity.getMaxMember()) {
+        long groupMembers = activityQueryRepository.countGroupMembers(groupId);
+        long overlapMembers = activityQueryRepository.countAlreadyJoinedMembersFromGroup(activity.getId(), groupId);
+        long expectedParticipants = currentParticipants + Math.max(0L, groupMembers - overlapMembers);
+
+        if (expectedParticipants > activity.getMaxMember()) {
             throw new ActivityDomainException(ActivityErrorCode.ACTIVITY_CAPACITY_EXCEEDED);
         }
     }
@@ -224,6 +235,17 @@ public class ActivityCommandService implements CreateActivityUseCase, UpdateActi
     private void validateGroupJoinDuplication(Activity activity, Group group) {
         if (activityGroupRepository.existsByActivityAndGroupAndStatusIn(activity, group, ACTIVE_JOIN_STATUSES)) {
             throw new ActivityDomainException(ActivityErrorCode.DUPLICATE_ACTIVITY_GROUP_JOIN);
+        }
+    }
+
+    private void validateMemberJoinDuplication(Long activityId, Long memberId, Long groupId) {
+        if (activityQueryRepository.existsMemberInActivityByStatuses(activityId, memberId, ACTIVE_JOIN_STATUSES)) {
+            throw new ActivityDomainException(ActivityErrorCode.DUPLICATE_ACTIVITY_MEMBER_JOIN);
+        }
+
+        long overlapMembers = activityQueryRepository.countAlreadyJoinedMembersFromGroup(activityId, groupId);
+        if (overlapMembers > 0) {
+            throw new ActivityDomainException(ActivityErrorCode.DUPLICATE_ACTIVITY_MEMBER_JOIN);
         }
     }
 }
