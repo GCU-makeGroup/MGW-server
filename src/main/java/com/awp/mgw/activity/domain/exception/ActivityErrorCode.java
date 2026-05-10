@@ -29,6 +29,9 @@ public enum ActivityErrorCode implements BaseCode {
     DUPLICATE_ACTIVITY_MEMBER_JOIN(HttpStatus.CONFLICT, "ACTIVITY-016", "이미 활동에 참여 중인 사용자입니다."),
     DUPLICATE_ACTIVITY_GROUP_JOIN(HttpStatus.CONFLICT, "ACTIVITY-017", "이미 활동에 참여 중인 그룹입니다."),
     MEMBER_ID_REQUIRED_FOR_SCOPE(HttpStatus.BAD_REQUEST, "ACTIVITY-018", "joined/created 조회에는 memberId가 필요합니다."),
+    HOST_CANNOT_LEAVE_ACTIVITY(HttpStatus.BAD_REQUEST, "ACTIVITY-019", "활동 생성자는 탈퇴할 수 없습니다. 활동을 삭제해주세요."),
+    ACTIVITY_MEMBER_NOT_FOUND(HttpStatus.BAD_REQUEST, "ACTIVITY-020", "활동 참여 정보를 찾을 수 없습니다."),
+    DUPLICATE_ACTIVITY_LIKE(HttpStatus.CONFLICT, "ACTIVITY-021", "이미 활동 좋아요를 눌렀습니다."),
     ;
     private final HttpStatus httpStatus;
     private final String code;

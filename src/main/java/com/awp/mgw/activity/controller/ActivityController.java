@@ -11,6 +11,9 @@ import com.awp.mgw.activity.usecase.DeleteActivityUseCase;
 import com.awp.mgw.activity.usecase.GetActivityDetailUseCase;
 import com.awp.mgw.activity.usecase.GetActivityListUseCase;
 import com.awp.mgw.activity.usecase.JoinActivityUseCase;
+import com.awp.mgw.activity.usecase.LeaveActivityUseCase;
+import com.awp.mgw.activity.usecase.LikeActivityUseCase;
+import com.awp.mgw.activity.usecase.UnlikeActivityUseCase;
 import com.awp.mgw.activity.usecase.UpdateActivityUseCase;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -38,6 +41,9 @@ public class ActivityController {
     private final GetActivityListUseCase getActivityListUseCase;
     private final GetActivityDetailUseCase getActivityDetailUseCase;
     private final JoinActivityUseCase joinActivityUseCase;
+    private final LeaveActivityUseCase leaveActivityUseCase;
+    private final LikeActivityUseCase likeActivityUseCase;
+    private final UnlikeActivityUseCase unlikeActivityUseCase;
 
     @PostMapping
     @Operation(summary = "활동 생성", description = "신규 활동을 생성합니다.")
@@ -95,5 +101,32 @@ public class ActivityController {
         @Valid @RequestBody JoinActivityRequest request
     ) {
         return joinActivityUseCase.joinActivity(memberId, activityId, request);
+    }
+
+    @DeleteMapping("/{activityId}/members")
+    @Operation(summary = "활동 탈퇴", description = "참여 중인 활동에서 탈퇴합니다.")
+    public ActivityIdResponse leaveActivity(
+        @RequestParam Long memberId,
+        @PathVariable Long activityId
+    ) {
+        return leaveActivityUseCase.leaveActivity(memberId, activityId);
+    }
+
+    @PostMapping("/{activityId}/likes")
+    @Operation(summary = "활동 좋아요", description = "활동 좋아요를 추가합니다.")
+    public ActivityIdResponse likeActivity(
+        @RequestParam Long memberId,
+        @PathVariable Long activityId
+    ) {
+        return likeActivityUseCase.likeActivity(memberId, activityId);
+    }
+
+    @DeleteMapping("/{activityId}/likes")
+    @Operation(summary = "활동 좋아요 취소", description = "활동 좋아요를 취소합니다.")
+    public ActivityIdResponse unlikeActivity(
+        @RequestParam Long memberId,
+        @PathVariable Long activityId
+    ) {
+        return unlikeActivityUseCase.unlikeActivity(memberId, activityId);
     }
 }
