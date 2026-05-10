@@ -24,6 +24,7 @@ public enum ActivityErrorCode implements BaseCode {
     ACTIVITY_CATEGORY_NOT_FOUND(HttpStatus.BAD_REQUEST, "ACTIVITY-011", "활동에 연결된 카테고리를 찾을 수 없습니다."),
     ACTIVITY_LIKE_NOT_FOUND(HttpStatus.BAD_REQUEST, "ACTIVITY-012", "활동 좋아요 정보를 찾을 수 없습니다."),
     INVALID_ACTIVITY_GROUP_STATUS(HttpStatus.BAD_REQUEST, "ACTIVITY-013", "활동 그룹 상태값이 유효하지 않습니다."),
+    FORBIDDEN_ACTIVITY_ACCESS(HttpStatus.FORBIDDEN, "ACTIVITY-014", "활동에 대한 권한이 없습니다."),
     ;
     private final HttpStatus httpStatus;
     private final String code;
