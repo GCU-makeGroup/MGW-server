@@ -18,6 +18,7 @@ public record GetGroupListResponse(
     public static GetGroupListResponse from(
             Page<Group> groupPage,
             Map<Long, Integer> commentCountByGroupId,
+            Map<Long, Integer> currentMemberCountByGroupId,
             Map<Long, List<Category>> categoriesByGroupId
     ) {
         return new GetGroupListResponse(
@@ -27,6 +28,7 @@ public record GetGroupListResponse(
                                 group,
                                 // N+1 쿼리 방지를 위해 밖에서 미리 세팅해 온 Map에서 꺼내 씀 (없으면 0)
                                 commentCountByGroupId.getOrDefault(group.getId(), 0),
+                                currentMemberCountByGroupId.getOrDefault(group.getId(), 0),
                                 categoriesByGroupId.getOrDefault(group.getId(), List.of())
                         ))
                         .toList()
@@ -59,9 +61,15 @@ public record GetGroupListResponse(
             String title,
             List<CategoryInfo> categories,
             Integer capacity,
+            Integer currentMemberCount,
             Integer commentCount
     ) {
-        public static GroupListItemResponse from(Group group, Integer commentCount, List<Category> categories) {
+        public static GroupListItemResponse from(
+                Group group,
+                Integer commentCount,
+                Integer currentMemberCount,
+                List<Category> categories
+        ) {
             return new GroupListItemResponse(
                     group.getId(),
                     group.getUpdatedAt(),
@@ -71,6 +79,7 @@ public record GetGroupListResponse(
                             .map(CategoryInfo::from)
                             .toList(),
                     group.getCapacity(),
+                    currentMemberCount,
                     commentCount
             );
         }

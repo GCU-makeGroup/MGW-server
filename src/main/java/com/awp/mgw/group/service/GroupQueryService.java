@@ -37,9 +37,15 @@ public class GroupQueryService implements GetGroupListUseCase {
         // 목록 대상 그룹만 먼저 가져온 뒤, 댓글 수와 카테고리는 groupId 기준 Map으로 한 번에 붙임
         Page<Group> groupPage = groupQueryRepository.findGroupList(categoryIds, pageable);
         Map<Long, Integer> commentCountByGroupId = getCommentCountByGroupId(groupPage.getContent());
+        Map<Long, Integer> currentMemberCountByGroupId = getCurrentMemberCountByGroupId(groupPage.getContent());
         Map<Long, List<Category>> categoriesByGroupId = getCategoriesByGroupId(groupPage.getContent());
 
-        return GetGroupListResponse.from(groupPage, commentCountByGroupId, categoriesByGroupId);
+        return GetGroupListResponse.from(
+                groupPage,
+                commentCountByGroupId,
+                currentMemberCountByGroupId,
+                categoriesByGroupId
+        );
     }
 
     private Member getMemberOrThrow(Long memberId) {
@@ -75,5 +81,18 @@ public class GroupQueryService implements GetGroupListUseCase {
         }
 
         return groupQueryRepository.findCategoriesByGroupIds(groupIds);
+    }
+
+    private Map<Long, Integer> getCurrentMemberCountByGroupId(List<Group> groups) {
+        // 현재 참여 인원 수도 groupId 기준으로 한 번에 조회해서 groupMembers 접근을 피함
+        List<Long> groupIds = groups.stream()
+                .map(Group::getId)
+                .toList();
+
+        if (groupIds.isEmpty()) {
+            return Map.of();
+        }
+
+        return groupQueryRepository.findCurrentMemberCountsByGroupIds(groupIds);
     }
 }
