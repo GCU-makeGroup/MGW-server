@@ -15,6 +15,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.awp.mgw.global.security.jwt.JwtTokenProvider;
+import org.springframework.dao.DataIntegrityViolationException;
 
 @Service
 @RequiredArgsConstructor
@@ -41,13 +42,17 @@ public class AuthCommandService implements SignupUseCase, LoginUseCase {
           request.introduction()
     );
 
-    Member savedMember = memberRepository.save(member);
+    try {
+      Member savedMember = memberRepository.save(member);
 
-    return new SignupResponse(
-          savedMember.getId(),
-          savedMember.getEmail(),
-          savedMember.getName()
-    );
+      return new SignupResponse(
+            savedMember.getId(),
+            savedMember.getEmail(),
+            savedMember.getName()
+      );
+    } catch (DataIntegrityViolationException e) {
+      throw new MemberDomainException(MemberErrorCode.DUPLICATE_MEMBER_EMAIL);
+    }
   }
 
   @Override
