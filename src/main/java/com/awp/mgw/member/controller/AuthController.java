@@ -38,28 +38,28 @@ public class AuthController {
     return loginUseCase.login(request);
   }
 
-  @PostMapping("/api/v1/auth/email-verification/send")
+  @PostMapping("/email-verification/send")
   public void sendEmailVerification(
         @Valid @RequestBody EmailVerificationSendRequest request
   ) {
     sendEmailVerificationUseCase.send(request.email());
   }
 
-  @PostMapping("/api/v1/auth/email-verification/resend")
+  @PostMapping("/email-verification/resend")
   public void resendEmailVerification(
         @Valid @RequestBody EmailVerificationSendRequest request
   ) {
     sendEmailVerificationUseCase.resend(request.email());
   }
 
-  @PostMapping("/api/v1/auth/email-verification/verify")
+  @PostMapping("/email-verification/verify")
   public void verifyEmailVerification(
         @Valid @RequestBody EmailVerificationVerifyRequest request
   ) {
     verifyEmailVerificationUseCase.verify(request.email(), request.code());
   }
 
-  @PostMapping("/api/v1/auth/token/reissue")
+  @PostMapping("/token/reissue")
   public TokenReissueResponse reissueAccessToken(
         @Valid @RequestBody TokenReissueRequest request
   ) {
