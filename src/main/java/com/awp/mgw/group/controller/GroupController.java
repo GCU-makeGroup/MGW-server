@@ -5,6 +5,7 @@ import com.awp.mgw.group.controller.dto.response.CreateGroupResponse;
 import com.awp.mgw.group.controller.dto.response.GetGroupDetailResponse;
 import com.awp.mgw.group.controller.dto.response.GetGroupListResponse;
 import com.awp.mgw.group.usecase.command.CreateGroupUseCase;
+import com.awp.mgw.group.usecase.command.JoinGroupUseCase;
 import com.awp.mgw.group.usecase.command.UpdateGroupUseCase;
 import com.awp.mgw.group.usecase.query.GetGroupDetailUseCase;
 import com.awp.mgw.group.usecase.query.GetGroupListUseCase;
@@ -26,6 +27,7 @@ public class GroupController {
 
     private final CreateGroupUseCase createGroupUseCase;
     private final UpdateGroupUseCase updateGroupUseCase;
+    private final JoinGroupUseCase joinGroupUseCase;
     private final GetGroupListUseCase getGroupListUseCase;
     private final GetGroupDetailUseCase getGroupDetailUseCase;
 
@@ -62,5 +64,13 @@ public class GroupController {
             @PathVariable Long groupId
     ) {
         return getGroupDetailUseCase.getGroupDetail(memberId, groupId);
+    }
+
+    @PostMapping("/{groupId}/members/me")
+    public void joinGroup(
+            @RequestParam Long memberId,
+            @PathVariable Long groupId
+    ) {
+        joinGroupUseCase.joinGroup(memberId, groupId);
     }
 }

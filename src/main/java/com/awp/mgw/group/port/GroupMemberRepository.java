@@ -4,4 +4,7 @@ import com.awp.mgw.group.domain.GroupMember;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface GroupMemberRepository extends JpaRepository<GroupMember, Long> {
+    boolean existsByMember_IdAndGroup_Id(Long memberId, Long groupId);
+
+    long countByGroup_Id(Long groupId);
 }

@@ -15,6 +15,7 @@ import com.awp.mgw.group.port.GroupCategoryRepository;
 import com.awp.mgw.group.port.GroupMemberRepository;
 import com.awp.mgw.group.port.GroupRepository;
 import com.awp.mgw.group.usecase.command.CreateGroupUseCase;
+import com.awp.mgw.group.usecase.command.JoinGroupUseCase;
 import com.awp.mgw.group.usecase.command.UpdateGroupUseCase;
 import com.awp.mgw.member.domain.Member;
 import com.awp.mgw.member.domain.exception.MemberDomainException;
@@ -29,7 +30,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Transactional
-public class GroupCommandService implements CreateGroupUseCase, UpdateGroupUseCase {
+public class GroupCommandService implements CreateGroupUseCase, UpdateGroupUseCase, JoinGroupUseCase {
 
     private final GroupRepository groupRepository;
     private final GroupMemberRepository groupMemberRepository;
@@ -88,6 +89,28 @@ public class GroupCommandService implements CreateGroupUseCase, UpdateGroupUseCa
         );
 
         return CreateGroupResponse.from(group.getId());
+    }
+
+    @Override
+    public void joinGroup(Long memberId, Long groupId) {
+        Member member = getMemberOrThrow(memberId);
+        Group group = groupRepository.findByIdForUpdate(groupId)
+                .orElseThrow(() -> new GroupDomainException(GroupErrorCode.GROUP_NOT_FOUND));
+
+        if (!group.getIsPublic()) {
+            throw new GroupDomainException(GroupErrorCode.PRIVATE_GROUP_CANNOT_JOIN);
+        }
+
+        if (groupMemberRepository.existsByMember_IdAndGroup_Id(member.getId(), group.getId())) {
+            throw new GroupDomainException(GroupErrorCode.MEMBER_ALREADY_JOINED_GROUP);
+        }
+
+        long currentMemberCount = groupMemberRepository.countByGroup_Id(group.getId());
+        if (currentMemberCount >= group.getCapacity()) {
+            throw new GroupDomainException(GroupErrorCode.GROUP_CAPACITY_EXCEEDED);
+        }
+
+        groupMemberRepository.save(GroupMember.create(member, group));
     }
 
     /**
