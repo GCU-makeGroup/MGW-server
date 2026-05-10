@@ -11,6 +11,7 @@ public record UpdateActivityRequest(
     @NotBlank(message = "활동 제목은 필수입니다.")
     String title,
 
+    @NotNull(message = "카테고리 목록은 필수입니다.")
     List<@NotNull(message = "카테고리 ID는 필수입니다.") @Min(value = 1, message = "카테고리 ID는 1 이상이어야 합니다.") Long> categoryIds,
 
     @NotNull(message = "최대 인원은 필수입니다.")
