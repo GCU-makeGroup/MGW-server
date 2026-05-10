@@ -143,7 +143,7 @@ public class AuthCommandService implements SignupUseCase, LoginUseCase, SendEmai
 
   @Override
   public TokenReissueResponse reissue(String refreshToken) {
-    if (!jwtTokenProvider.validateToken(refreshToken)) {
+    if (!jwtTokenProvider.validateRefreshToken(refreshToken)) {
       throw new MemberDomainException(MemberErrorCode.REFRESH_TOKEN_INVALID);
     }
 
