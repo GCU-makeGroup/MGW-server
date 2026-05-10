@@ -9,6 +9,13 @@ import com.awp.mgw.member.usecase.SignupUseCase;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+import com.awp.mgw.member.controller.dto.request.EmailVerificationSendRequest;
+import com.awp.mgw.member.controller.dto.request.EmailVerificationVerifyRequest;
+import com.awp.mgw.member.controller.dto.request.TokenReissueRequest;
+import com.awp.mgw.member.controller.dto.response.TokenReissueResponse;
+import com.awp.mgw.member.usecase.ReissueTokenUseCase;
+import com.awp.mgw.member.usecase.SendEmailVerificationUseCase;
+import com.awp.mgw.member.usecase.VerifyEmailVerificationUseCase;
 
 @RestController
 @RequestMapping("/api/v1/auth")

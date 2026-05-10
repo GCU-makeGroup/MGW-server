@@ -21,9 +21,9 @@ import com.awp.mgw.member.application.EmailVerificationCodeGenerator;
 import com.awp.mgw.member.controller.dto.response.TokenReissueResponse;
 import com.awp.mgw.member.domain.EmailVerification;
 import com.awp.mgw.member.port.EmailVerificationRepository;
-import com.awp.mgw.member.usecase.command.ReissueTokenUseCase;
-import com.awp.mgw.member.usecase.command.SendEmailVerificationUseCase;
-import com.awp.mgw.member.usecase.command.VerifyEmailVerificationUseCase;
+import com.awp.mgw.member.usecase.ReissueTokenUseCase;
+import com.awp.mgw.member.usecase.SendEmailVerificationUseCase;
+import com.awp.mgw.member.usecase.VerifyEmailVerificationUseCase;
 
 @Service
 @RequiredArgsConstructor

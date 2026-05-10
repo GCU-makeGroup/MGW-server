@@ -1,4 +1,4 @@
-package com.awp.mgw.member.usecase.command;
+package com.awp.mgw.member.usecase;
 
 public interface SendEmailVerificationUseCase {
 
