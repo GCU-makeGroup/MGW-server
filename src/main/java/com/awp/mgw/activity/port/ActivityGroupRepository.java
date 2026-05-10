@@ -8,4 +8,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface ActivityGroupRepository extends JpaRepository<ActivityGroup, Long> {
     boolean existsByActivityAndGroupAndStatusIn(Activity activity, Group group, Iterable<ActivityGroupStatus> statuses);
+    void deleteAllByGroup(Group group);
 }
