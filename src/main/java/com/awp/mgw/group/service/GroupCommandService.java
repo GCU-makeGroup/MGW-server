@@ -1,5 +1,6 @@
 package com.awp.mgw.group.service;
 
+import com.awp.mgw.activity.port.ActivityGroupRepository;
 import com.awp.mgw.category.domain.Category;
 import com.awp.mgw.category.domain.exception.CategoryDomainException;
 import com.awp.mgw.category.domain.exception.CategoryErrorCode;
@@ -15,6 +16,8 @@ import com.awp.mgw.group.port.GroupCategoryRepository;
 import com.awp.mgw.group.port.GroupMemberRepository;
 import com.awp.mgw.group.port.GroupRepository;
 import com.awp.mgw.group.usecase.command.CreateGroupUseCase;
+import com.awp.mgw.group.usecase.command.DeleteGroupUseCase;
+import com.awp.mgw.group.usecase.command.LeaveGroupUseCase;
 import com.awp.mgw.group.usecase.command.UpdateGroupUseCase;
 import com.awp.mgw.member.domain.Member;
 import com.awp.mgw.member.domain.exception.MemberDomainException;
@@ -29,11 +32,12 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Transactional
-public class GroupCommandService implements CreateGroupUseCase, UpdateGroupUseCase {
+public class GroupCommandService implements CreateGroupUseCase, UpdateGroupUseCase, DeleteGroupUseCase, LeaveGroupUseCase {
 
     private final GroupRepository groupRepository;
     private final GroupMemberRepository groupMemberRepository;
     private final GroupCategoryRepository groupCategoryRepository;
+    private final ActivityGroupRepository activityGroupRepository;
     private final MemberRepository memberRepository;
     private final CategoryRepository categoryRepository;
 
@@ -90,6 +94,32 @@ public class GroupCommandService implements CreateGroupUseCase, UpdateGroupUseCa
         return CreateGroupResponse.from(group.getId());
     }
 
+    @Override
+    public void deleteGroup(Long memberId, Long groupId) {
+        Member member = getMemberOrThrow(memberId);
+        Group group = getOwnedGroupOrThrow(groupId, member.getId());
+
+        // Group 내부 연관(comment, groupMember, groupCategory)은 cascade로 삭제되고,
+        // ActivityGroup은 Group의 cascade 범위 밖이라 먼저 제거한다.
+        activityGroupRepository.deleteAllByGroup(group);
+        groupRepository.delete(group);
+    }
+
+    @Override
+    public void leaveGroup(Long memberId, Long groupId) {
+        Member member = getMemberOrThrow(memberId);
+        Group group = getGroupOrThrow(groupId);
+        GroupMember groupMember = groupMemberRepository.findByMember_IdAndGroup_Id(member.getId(), group.getId())
+                .orElseThrow(() -> new GroupDomainException(GroupErrorCode.GROUP_MEMBER_NOT_FOUND));
+
+        if (isGroupOwner(group, member.getId())) {
+            validateOwnerCanLeave(group);
+            group.detachMember();
+        }
+
+        groupMemberRepository.delete(groupMember);
+    }
+
     /**
      * 그룹 정원 유효성 검증
      */
@@ -108,14 +138,30 @@ public class GroupCommandService implements CreateGroupUseCase, UpdateGroupUseCa
     }
 
     private Group getOwnedGroupOrThrow(Long groupId, Long memberId) {
-        Group group = groupRepository.findById(groupId)
-            .orElseThrow(() -> new GroupDomainException(GroupErrorCode.GROUP_NOT_FOUND));
+        Group group = getGroupOrThrow(groupId);
 
-        if (group.getMember() == null || !group.getMember().getId().equals(memberId)) {
+        if (!isGroupOwner(group, memberId)) {
             throw new GroupDomainException(GroupErrorCode.GROUP_NOT_OWNED);
         }
 
         return group;
+    }
+
+    private Group getGroupOrThrow(Long groupId) {
+        return groupRepository.findById(groupId)
+            .orElseThrow(() -> new GroupDomainException(GroupErrorCode.GROUP_NOT_FOUND));
+    }
+
+    private boolean isGroupOwner(Group group, Long memberId) {
+        return group.getMember() != null && group.getMember().getId().equals(memberId);
+    }
+
+    private void validateOwnerCanLeave(Group group) {
+        long currentMemberCount = groupMemberRepository.countByGroup_Id(group.getId());
+
+        if (currentMemberCount > 1) {
+            throw new GroupDomainException(GroupErrorCode.GROUP_OWNER_CANNOT_LEAVE);
+        }
     }
 
     private List<Category> getCategoriesOrThrow(List<Long> categoryIds) {
