@@ -10,12 +10,21 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.*;
 
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "activity_like")
+@Table(
+    name = "activity_like",
+    uniqueConstraints = {
+        @UniqueConstraint(
+            name = "uk_activity_like_member_activity",
+            columnNames = {"member_id", "activity_id"}
+        )
+    }
+)
 public class ActivityLike {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
