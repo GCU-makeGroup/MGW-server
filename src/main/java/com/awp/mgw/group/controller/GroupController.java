@@ -7,6 +7,7 @@ import com.awp.mgw.group.controller.dto.response.GetGroupListResponse;
 import com.awp.mgw.group.usecase.command.CreateGroupUseCase;
 import com.awp.mgw.group.usecase.command.DeleteGroupUseCase;
 import com.awp.mgw.group.usecase.command.LeaveGroupUseCase;
+import com.awp.mgw.group.usecase.command.JoinGroupUseCase;
 import com.awp.mgw.group.usecase.command.UpdateGroupUseCase;
 import com.awp.mgw.group.usecase.query.GetGroupDetailUseCase;
 import com.awp.mgw.group.usecase.query.GetGroupListUseCase;
@@ -30,6 +31,7 @@ public class GroupController {
 
     private final CreateGroupUseCase createGroupUseCase;
     private final UpdateGroupUseCase updateGroupUseCase;
+    private final JoinGroupUseCase joinGroupUseCase;
     private final DeleteGroupUseCase deleteGroupUseCase;
     private final LeaveGroupUseCase leaveGroupUseCase;
     private final GetGroupListUseCase getGroupListUseCase;
@@ -92,6 +94,20 @@ public class GroupController {
             @PathVariable Long groupId
     ) {
         return getGroupDetailUseCase.getGroupDetail(memberId, groupId);
+    }
+
+    @PostMapping("/{groupId}/members/me")
+    @Operation(
+            summary = "그룹 참여",
+            description = "공개 그룹에 참여합니다. 이미 참여한 그룹이거나 정원이 초과된 그룹, 비공개 그룹은 참여할 수 없습니다."
+    )
+    public void joinGroup(
+            @Parameter(description = "참여 요청 회원 ID", example = "1")
+            @RequestParam Long memberId,
+            @Parameter(description = "참여할 그룹 ID", example = "10")
+            @PathVariable Long groupId
+    ) {
+        joinGroupUseCase.joinGroup(memberId, groupId);
     }
 
     @DeleteMapping("/{groupId}")
