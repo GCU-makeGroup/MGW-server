@@ -1,5 +1,7 @@
 package com.awp.mgw.global.security.jwt;
 
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
@@ -12,6 +14,10 @@ import java.util.Date;
 
 @Component
 public class JwtTokenProvider {
+  private static final String EMAIL_CLAIM = "email";
+  private static final String TOKEN_TYPE_CLAIM = "type";
+  private static final String ACCESS_TOKEN_TYPE = "ACCESS";
+  private static final String REFRESH_TOKEN_TYPE = "REFRESH";
 
   private final Key key;
   private final long accessTokenExpiration;
@@ -28,20 +34,55 @@ public class JwtTokenProvider {
   }
 
   public String createAccessToken(Long memberId, String email) {
-    return createToken(memberId, email, accessTokenExpiration);
+    return createToken(memberId, email, ACCESS_TOKEN_TYPE, accessTokenExpiration);
   }
 
   public String createRefreshToken(Long memberId, String email) {
-    return createToken(memberId, email, refreshTokenExpiration);
+    return createToken(memberId, email, REFRESH_TOKEN_TYPE, refreshTokenExpiration);
   }
 
-  private String createToken(Long memberId, String email, long expiration) {
+  public boolean validateToken(String token) {
+    try {
+      parseClaims(token);
+      return true;
+    } catch (JwtException | IllegalArgumentException e) {
+      return false;
+    }
+  }
+
+  public boolean validateRefreshToken(String token) {
+    try {
+      Claims claims = parseClaims(token);
+      return REFRESH_TOKEN_TYPE.equals(claims.get(TOKEN_TYPE_CLAIM, String.class));
+    } catch (JwtException | IllegalArgumentException e) {
+      return false;
+    }
+  }
+
+  public Long getMemberId(String token) {
+    return Long.valueOf(parseClaims(token).getSubject());
+  }
+
+  public String getEmail(String token) {
+    return parseClaims(token).get(EMAIL_CLAIM, String.class);
+  }
+
+  private Claims parseClaims(String token) {
+    return Jwts.parserBuilder()
+          .setSigningKey(key)
+          .build()
+          .parseClaimsJws(token)
+          .getBody();
+  }
+
+  private String createToken(Long memberId, String email, String tokenType, long expiration) {
     Date now = new Date();
     Date expiredAt = new Date(now.getTime() + expiration);
 
     return Jwts.builder()
           .setSubject(String.valueOf(memberId))
-          .claim("email", email)
+          .claim(EMAIL_CLAIM, email)
+          .claim(TOKEN_TYPE_CLAIM, tokenType)
           .setIssuedAt(now)
           .setExpiration(expiredAt)
           .signWith(key, SignatureAlgorithm.HS256)

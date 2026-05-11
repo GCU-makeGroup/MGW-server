@@ -22,7 +22,15 @@ public enum MemberErrorCode implements BaseCode {
 
     DUPLICATE_MEMBER_EMAIL(HttpStatus.CONFLICT, "MEMBER-008", "이미 가입된 이메일입니다."),
     MEMBER_SETTING_NOT_FOUND(HttpStatus.NOT_FOUND, "MEMBER-009", "회원 설정 정보를 찾을 수 없습니다."),
-    ;
+
+    EMAIL_VERIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND, "MEMBER-011", "이메일 인증 요청을 찾을 수 없습니다."),
+    EMAIL_VERIFICATION_CODE_INVALID(HttpStatus.BAD_REQUEST, "MEMBER-012", "이메일 인증 코드가 올바르지 않습니다."),
+    EMAIL_VERIFICATION_CODE_EXPIRED(HttpStatus.BAD_REQUEST, "MEMBER-013", "이메일 인증 코드가 만료되었습니다."),
+    EMAIL_ALREADY_VERIFIED(HttpStatus.BAD_REQUEST, "MEMBER-014", "이미 인증된 이메일입니다."),
+
+    INVALID_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "MEMBER-015", "Refresh Token이 유효하지 않습니다."),
+    EXPIRED_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "MEMBER-016", "Refresh Token이 만료되었습니다.");
+
     private final HttpStatus httpStatus;
     private final String code;
     private final String message;

@@ -9,6 +9,13 @@ import com.awp.mgw.member.usecase.SignupUseCase;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+import com.awp.mgw.member.controller.dto.request.EmailVerificationSendRequest;
+import com.awp.mgw.member.controller.dto.request.EmailVerificationVerifyRequest;
+import com.awp.mgw.member.controller.dto.request.TokenReissueRequest;
+import com.awp.mgw.member.controller.dto.response.TokenReissueResponse;
+import com.awp.mgw.member.usecase.ReissueTokenUseCase;
+import com.awp.mgw.member.usecase.SendEmailVerificationUseCase;
+import com.awp.mgw.member.usecase.VerifyEmailVerificationUseCase;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -17,6 +24,9 @@ public class AuthController {
 
   private final SignupUseCase signupUseCase;
   private final LoginUseCase loginUseCase;
+  private final SendEmailVerificationUseCase sendEmailVerificationUseCase;
+  private final VerifyEmailVerificationUseCase verifyEmailVerificationUseCase;
+  private final ReissueTokenUseCase reissueTokenUseCase;
 
   @PostMapping("/signup")
   public SignupResponse signup(@Valid @RequestBody SignupRequest request) {
@@ -26,5 +36,33 @@ public class AuthController {
   @PostMapping("/login")
   public LoginResponse login(@Valid @RequestBody LoginRequest request) {
     return loginUseCase.login(request);
+  }
+
+  @PostMapping("/email-verification/send")
+  public void sendEmailVerification(
+        @Valid @RequestBody EmailVerificationSendRequest request
+  ) {
+    sendEmailVerificationUseCase.send(request.email());
+  }
+
+  @PostMapping("/email-verification/resend")
+  public void resendEmailVerification(
+        @Valid @RequestBody EmailVerificationSendRequest request
+  ) {
+    sendEmailVerificationUseCase.resend(request.email());
+  }
+
+  @PostMapping("/email-verification/verify")
+  public void verifyEmailVerification(
+        @Valid @RequestBody EmailVerificationVerifyRequest request
+  ) {
+    verifyEmailVerificationUseCase.verify(request.email(), request.code());
+  }
+
+  @PostMapping("/token/reissue")
+  public TokenReissueResponse reissueAccessToken(
+        @Valid @RequestBody TokenReissueRequest request
+  ) {
+    return reissueTokenUseCase.reissue(request.refreshToken());
   }
 }
