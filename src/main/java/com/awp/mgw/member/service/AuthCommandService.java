@@ -24,6 +24,8 @@ import com.awp.mgw.member.port.EmailVerificationRepository;
 import com.awp.mgw.member.usecase.ReissueTokenUseCase;
 import com.awp.mgw.member.usecase.SendEmailVerificationUseCase;
 import com.awp.mgw.member.usecase.VerifyEmailVerificationUseCase;
+import com.awp.mgw.member.port.RefreshTokenRepository;
+import com.awp.mgw.member.domain.RefreshToken;
 
 @Service
 @RequiredArgsConstructor
@@ -38,6 +40,7 @@ public class AuthCommandService implements SignupUseCase, LoginUseCase, SendEmai
   private final EmailVerificationRepository emailVerificationRepository;
   private final EmailVerificationCodeGenerator codeGenerator;
   private final EmailSender emailSender;
+  private final RefreshTokenRepository refreshTokenRepository;
 
   @Override
   @Transactional
@@ -70,6 +73,7 @@ public class AuthCommandService implements SignupUseCase, LoginUseCase, SendEmai
   }
 
   @Override
+  @Transactional
   public LoginResponse login(LoginRequest request) {
     Member member = memberRepository.findByEmail(request.email())
           .orElseThrow(() ->
@@ -88,6 +92,14 @@ public class AuthCommandService implements SignupUseCase, LoginUseCase, SendEmai
           member.getId(),
           member.getEmail()
     );
+
+    refreshTokenRepository.findByMemberId(member.getId())
+          .ifPresentOrElse(
+                savedToken -> savedToken.updateToken(refreshToken),
+                () -> refreshTokenRepository.save(
+                      RefreshToken.create(member.getId(), refreshToken)
+                )
+          );
 
     return new LoginResponse(
           accessToken,
@@ -142,19 +154,37 @@ public class AuthCommandService implements SignupUseCase, LoginUseCase, SendEmai
   }
 
   @Override
+  @Transactional
   public TokenReissueResponse reissue(String refreshToken) {
     if (!jwtTokenProvider.validateRefreshToken(refreshToken)) {
-      throw new MemberDomainException(MemberErrorCode.REFRESH_TOKEN_INVALID);
+      throw new MemberDomainException(MemberErrorCode.INVALID_REFRESH_TOKEN);
     }
 
     Long memberId = jwtTokenProvider.getMemberId(refreshToken);
-    String email = jwtTokenProvider.getEmail(refreshToken);
 
-    if (!memberRepository.existsById(memberId)) {
-      throw new MemberDomainException(MemberErrorCode.MEMBER_NOT_FOUND);
+    RefreshToken savedToken = refreshTokenRepository.findByMemberId(memberId)
+          .orElseThrow(() -> new MemberDomainException(MemberErrorCode.INVALID_REFRESH_TOKEN));
+
+    if (!savedToken.getToken().equals(refreshToken)) {
+      throw new MemberDomainException(MemberErrorCode.INVALID_REFRESH_TOKEN);
     }
 
+    String email = jwtTokenProvider.getEmail(refreshToken);
+
+    return issueTokens(memberId, email);
+  }
+
+  private TokenReissueResponse issueTokens(Long memberId, String email) {
     String accessToken = jwtTokenProvider.createAccessToken(memberId, email);
+    String refreshToken = jwtTokenProvider.createRefreshToken(memberId, email);
+
+    refreshTokenRepository.findByMemberId(memberId)
+          .ifPresentOrElse(
+                savedToken -> savedToken.updateToken(refreshToken),
+                () -> refreshTokenRepository.save(
+                      RefreshToken.create(memberId, refreshToken)
+                )
+          );
 
     return new TokenReissueResponse(accessToken);
   }
