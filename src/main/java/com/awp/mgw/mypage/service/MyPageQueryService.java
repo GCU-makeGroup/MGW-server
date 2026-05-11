@@ -1,18 +1,19 @@
 package com.awp.mgw.mypage.service;
 
+import com.awp.mgw.activity.port.ActivityQueryRepository;
+import com.awp.mgw.group.port.GroupMemberRepository;
+import com.awp.mgw.member.domain.Member;
+import com.awp.mgw.member.port.MemberRepository;
 import com.awp.mgw.mypage.controller.dto.response.MyPageCalendarResponse;
 import com.awp.mgw.mypage.controller.dto.response.MyPageMainResponse;
 import com.awp.mgw.mypage.controller.dto.response.MyPageProfileResponse;
-import com.awp.mgw.mypage.controller.dto.response.MyPageScheduleResponse;
 import com.awp.mgw.mypage.controller.dto.response.MyPageSummaryResponse;
 import com.awp.mgw.mypage.usecase.query.GetMyPageMainUseCase;
+import com.awp.mgw.schedule.controller.dto.response.ScheduleDateResponse;
+import com.awp.mgw.schedule.usecase.query.GetMonthlyScheduleUseCase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.awp.mgw.member.port.MemberRepository;
-import com.awp.mgw.member.domain.Member;
-import com.awp.mgw.activity.port.ActivityQueryRepository;
-import com.awp.mgw.group.port.GroupMemberRepository;
 
 import java.time.LocalDate;
 import java.time.YearMonth;
@@ -28,11 +29,12 @@ public class MyPageQueryService implements GetMyPageMainUseCase {
   private final MemberRepository memberRepository;
   private final ActivityQueryRepository activityQueryRepository;
   private final GroupMemberRepository groupMemberRepository;
+  private final GetMonthlyScheduleUseCase getMonthlyScheduleUseCase;
 
   @Override
   public MyPageMainResponse getMyPageMain(Long memberId, YearMonth yearMonth) {
     Member member = memberRepository.findById(memberId)
-          .orElseThrow(() -> new RuntimeException("회원이 존재하지 않습니다."));    // TODO: 게시글 수 조회
+          .orElseThrow(() -> new RuntimeException("회원이 존재하지 않습니다."));
 
     long activityCount = activityQueryRepository.countJoinedActivities(memberId);
     long groupCount = groupMemberRepository.countByMember_Id(memberId);
@@ -49,17 +51,13 @@ public class MyPageQueryService implements GetMyPageMainUseCase {
           TEMP_POINT
     );
 
-    List<MyPageScheduleResponse> schedules = List.of(
-          new MyPageScheduleResponse(LocalDate.of(yearMonth.getYear(), yearMonth.getMonth(), 3), true),
-          new MyPageScheduleResponse(LocalDate.of(yearMonth.getYear(), yearMonth.getMonth(), 6), true),
-          new MyPageScheduleResponse(LocalDate.of(yearMonth.getYear(), yearMonth.getMonth(), 11), true),
-          new MyPageScheduleResponse(LocalDate.of(yearMonth.getYear(), yearMonth.getMonth(), 21), true)
-    );
+    List<ScheduleDateResponse> schedules =
+          getMonthlyScheduleUseCase.getMonthlySchedules(memberId, yearMonth);
 
     MyPageCalendarResponse calendar = new MyPageCalendarResponse(
           yearMonth.getYear(),
           yearMonth.getMonthValue(),
-          LocalDate.of(yearMonth.getYear(), yearMonth.getMonth(), 15),
+          LocalDate.now(),
           schedules
     );
 
