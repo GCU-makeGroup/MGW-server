@@ -12,6 +12,7 @@ import com.awp.mgw.group.port.GroupQueryRepository;
 import com.awp.mgw.group.usecase.query.GetGroupDetailUseCase;
 import com.awp.mgw.group.usecase.query.GetGroupListUseCase;
 import com.awp.mgw.group.usecase.query.GetMyGroupListUseCase;
+import com.awp.mgw.group.usecase.query.SearchGroupListUseCase;
 import com.awp.mgw.member.domain.Member;
 import com.awp.mgw.member.domain.exception.MemberDomainException;
 import com.awp.mgw.member.domain.exception.MemberErrorCode;
@@ -31,7 +32,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class GroupQueryService implements GetGroupListUseCase, GetMyGroupListUseCase, GetGroupDetailUseCase {
+public class GroupQueryService implements GetGroupListUseCase, GetMyGroupListUseCase, SearchGroupListUseCase, GetGroupDetailUseCase {
 
     private final GroupQueryRepository groupQueryRepository;
     private final CommentRepository commentRepository;
@@ -51,6 +52,15 @@ public class GroupQueryService implements GetGroupListUseCase, GetMyGroupListUse
         getMemberOrThrow(memberId);
 
         Page<Group> groupPage = groupQueryRepository.findMyGroupList(memberId, pageable);
+
+        return toGroupListResponse(groupPage);
+    }
+
+    @Override
+    public GetGroupListResponse searchGroupList(Long memberId, String keyword, Pageable pageable) {
+        getMemberOrThrow(memberId);
+
+        Page<Group> groupPage = groupQueryRepository.findGroupListByName(memberId, keyword, pageable);
 
         return toGroupListResponse(groupPage);
     }

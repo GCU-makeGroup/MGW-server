@@ -15,6 +15,7 @@ import com.awp.mgw.group.usecase.command.UpdateGroupUseCase;
 import com.awp.mgw.group.usecase.query.GetGroupDetailUseCase;
 import com.awp.mgw.group.usecase.query.GetGroupListUseCase;
 import com.awp.mgw.group.usecase.query.GetMyGroupListUseCase;
+import com.awp.mgw.group.usecase.query.SearchGroupListUseCase;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -41,6 +42,7 @@ public class GroupController {
     private final LeaveGroupUseCase leaveGroupUseCase;
     private final GetGroupListUseCase getGroupListUseCase;
     private final GetMyGroupListUseCase getMyGroupListUseCase;
+    private final SearchGroupListUseCase searchGroupListUseCase;
     private final GetGroupDetailUseCase getGroupDetailUseCase;
 
     @PostMapping
@@ -100,6 +102,22 @@ public class GroupController {
             @PageableDefault(size = 10, sort = "updatedAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
         return getMyGroupListUseCase.getMyGroupList(memberId, pageable);
+    }
+
+    @GetMapping("/search")
+    @Operation(
+            summary = "그룹명 검색",
+            description = "그룹명 기준으로 검색합니다. 검색어와 그룹명의 공백을 제거한 뒤 비교하므로 띄어쓰기가 달라도 검색됩니다."
+    )
+    public GetGroupListResponse searchGroupList(
+            @Parameter(description = "검색 요청 회원 ID", example = "1")
+            @RequestParam Long memberId,
+            @Parameter(description = "검색할 그룹명 키워드", example = "모 각 코")
+            @RequestParam String keyword,
+            @Parameter(description = "페이징 및 정렬 정보. 예: sort=updatedAt,desc / sort=name,asc")
+            @PageableDefault(size = 10, sort = "updatedAt", direction = Sort.Direction.DESC) Pageable pageable
+    ) {
+        return searchGroupListUseCase.searchGroupList(memberId, keyword, pageable);
     }
 
     @GetMapping("/{groupId}")

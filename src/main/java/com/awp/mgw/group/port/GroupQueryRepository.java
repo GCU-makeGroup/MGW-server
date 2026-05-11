@@ -7,6 +7,7 @@ import com.querydsl.core.Tuple;
 import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -109,6 +110,38 @@ public class GroupQueryRepository {
         return new PageImpl<>(groups, pageable, total != null ? total : 0);
     }
 
+    public Page<Group> findGroupListByName(Long memberId, String keyword, Pageable pageable) {
+        OrderSpecifier<?>[] orderSpecifiers = toOrderSpecifiers(pageable.getSort());
+        BooleanExpression nameCondition = normalizedNameContains(keyword);
+
+        List<Long> groupIds = queryFactory
+                .select(group.id)
+                .from(group)
+                .where(accessibleGroup(memberId), nameCondition)
+                .orderBy(orderSpecifiers)
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .fetch();
+
+        Long total = queryFactory
+                .select(group.id.count())
+                .from(group)
+                .where(accessibleGroup(memberId), nameCondition)
+                .fetchOne();
+
+        if (groupIds.isEmpty()) {
+            return new PageImpl<>(List.of(), pageable, total != null ? total : 0);
+        }
+
+        List<Group> groups = queryFactory
+                .selectFrom(group)
+                .where(group.id.in(groupIds), accessibleGroup(memberId))
+                .orderBy(orderSpecifiers)
+                .fetch();
+
+        return new PageImpl<>(groups, pageable, total != null ? total : 0);
+    }
+
     public Optional<Group> findAccessibleGroupDetailById(Long groupId, Long memberId) {
         Group foundGroup = queryFactory
                 .selectFrom(group)
@@ -194,6 +227,20 @@ public class GroupQueryRepository {
         }
 
         return groupCategory.category.id.in(categoryIds);
+    }
+
+    private BooleanExpression normalizedNameContains(String keyword) {
+        if (keyword == null || keyword.isBlank()) {
+            return null;
+        }
+
+        String normalizedKeyword = keyword.replaceAll("\\s+", "");
+        if (normalizedKeyword.isBlank()) {
+            return null;
+        }
+
+        return Expressions.stringTemplate("replace({0}, ' ', '')", group.name)
+                .containsIgnoreCase(normalizedKeyword);
     }
 
     private BooleanExpression accessibleGroup(Long memberId) {
