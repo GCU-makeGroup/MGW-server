@@ -22,6 +22,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.16")
+    implementation("org.springframework.boot:spring-boot-starter-security")
 
     compileOnly("org.projectlombok:lombok")
     annotationProcessor("org.projectlombok:lombok")
@@ -43,6 +44,11 @@ dependencies {
 
     // MySQL
     runtimeOnly("com.mysql:mysql-connector-j")
+
+    // jwt token
+    implementation("io.jsonwebtoken:jjwt-api:0.11.5")
+    runtimeOnly("io.jsonwebtoken:jjwt-impl:0.11.5")
+    runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.11.5")
 }
 
 // Q-Class가 생성될 경로 지정 (기본적으로 build 폴더 아래에 생깁니다)
