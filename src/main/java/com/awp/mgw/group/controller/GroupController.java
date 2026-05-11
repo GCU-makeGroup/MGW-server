@@ -20,10 +20,13 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -31,6 +34,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/groups")
 @RequiredArgsConstructor
+@Validated
 @Tag(name = "Group | 그룹", description = "그룹 관련 API")
 public class GroupController {
 
@@ -113,7 +117,10 @@ public class GroupController {
             @Parameter(description = "검색 요청 회원 ID", example = "1")
             @RequestParam Long memberId,
             @Parameter(description = "검색할 그룹명 키워드", example = "모 각 코")
-            @RequestParam String keyword,
+            @RequestParam
+            @NotBlank(message = "검색어는 필수입니다.")
+            @Size(max = 50, message = "검색어는 50자 이하여야 합니다.")
+            String keyword,
             @Parameter(description = "페이징 및 정렬 정보. 예: sort=updatedAt,desc / sort=name,asc")
             @PageableDefault(size = 10, sort = "updatedAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
