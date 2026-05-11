@@ -142,6 +142,21 @@ public class ActivityQueryRepository {
         return count == null ? 0L : count;
     }
 
+    public long countJoinedActivities(Long memberId) {
+        Long count = queryFactory
+              .select(activityGroup.activity.id.countDistinct())
+              .from(activityGroup)
+              .join(activityGroup.group, group)
+              .join(group.groupMembers, groupMember)
+              .where(
+                    activityGroup.status.eq(ActivityGroupStatus.JOIN),
+                    groupMember.member.id.eq(memberId)
+              )
+              .fetchOne();
+
+        return count == null ? 0L : count;
+    }
+
     public boolean existsJoinedMember(Long activityId, Long memberId) {
         Integer exists = queryFactory
             .selectOne()
