@@ -14,7 +14,7 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/schedules")
+@RequestMapping("/api/v1/schedule")
 public class ScheduleController {
 
   private final GetMonthlyScheduleUseCase getMonthlyScheduleUseCase;
