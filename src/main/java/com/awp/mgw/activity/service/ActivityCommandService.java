@@ -189,156 +189,157 @@ public class ActivityCommandService implements
 
         activityLikeRepository.delete(activityLike);
         return ActivityIdResponse.from(activityId);
-        public ActivityImageUploadResponse uploadActivityImage (Long memberId, MultipartFile file){
-            getMemberOrThrow(memberId);
-            validateImageFile(file);
-            String thumbnailPath = fileUtil.saveFile(file, "activities");
-            return ActivityImageUploadResponse.from(buildPublicUrl(thumbnailPath));
+    }
+
+    @Override
+    public ActivityImageUploadResponse uploadActivityImage (Long memberId, MultipartFile file){
+        getMemberOrThrow(memberId);
+        validateImageFile(file);
+        String thumbnailPath = fileUtil.saveFile(file, "activities");
+        return ActivityImageUploadResponse.from(buildPublicUrl(thumbnailPath));
+    }
+
+    private Member getMemberOrThrow (Long memberId){
+        return memberRepository.findById(memberId)
+              .orElseThrow(() -> new MemberDomainException(MemberErrorCode.MEMBER_NOT_FOUND));
+    }
+
+    private Activity getOwnedActivityOrThrow (Long activityId, Long memberId){
+        Activity activity = getActivityOrThrow(activityId);
+        if (activity.getCreator() == null || !activity.getCreator().getId().equals(memberId)) {
+            throw new ActivityDomainException(ActivityErrorCode.FORBIDDEN_ACTIVITY_ACCESS);
+        }
+        return activity;
+    }
+
+    private Activity getActivityOrThrow (Long activityId){
+        Activity activity = activityRepository.findById(activityId)
+              .orElseThrow(() -> new ActivityDomainException(ActivityErrorCode.ACTIVITY_NOT_FOUND));
+        return activity;
+    }
+
+    private Activity getActivityForUpdateOrThrow (Long activityId){
+        return activityRepository.findByIdForUpdate(activityId)
+              .orElseThrow(() -> new ActivityDomainException(ActivityErrorCode.ACTIVITY_NOT_FOUND));
+    }
+
+    private void saveActivityCategories (Activity activity, List < Long > categoryIds){
+        if (categoryIds == null || categoryIds.isEmpty()) {
+            return;
         }
 
-        private Member getMemberOrThrow (Long memberId){
-            return memberRepository.findById(memberId)
-                  .orElseThrow(() -> new MemberDomainException(MemberErrorCode.MEMBER_NOT_FOUND));
+        List<Category> categories = getCategoriesOrThrow(categoryIds);
+        categories.forEach(category ->
+              activityCategoryRepository.save(ActivityCategory.create(activity, category))
+        );
+    }
+
+    private void replaceActivityCategories (Activity activity, List < Long > categoryIds){
+        if (categoryIds == null) {
+            return;
         }
 
-        private Activity getOwnedActivityOrThrow (Long activityId, Long memberId){
-            Activity activity = getActivityOrThrow(activityId);
-            if (activity.getCreator() == null || !activity.getCreator().getId().equals(memberId)) {
+        activityCategoryRepository.deleteAllByActivity(activity);
+        if (categoryIds.isEmpty()) {
+            return;
+        }
+
+        List<Category> categories = getCategoriesOrThrow(categoryIds);
+        categories.forEach(category ->
+              activityCategoryRepository.save(ActivityCategory.create(activity, category))
+        );
+    }
+
+    private List<Category> getCategoriesOrThrow (List < Long > categoryIds) {
+        List<Long> distinctCategoryIds = categoryIds.stream()
+              .distinct()
+              .toList();
+        List<Category> categories = categoryRepository.findAllById(distinctCategoryIds);
+
+        if (categories.size() != distinctCategoryIds.size()) {
+            throw new CategoryDomainException(CategoryErrorCode.CATEGORY_NOT_FOUND);
+        }
+
+        return categories;
+    }
+
+    private void validateCapacity (Activity activity, Long groupId){
+        long currentParticipants = activityQueryRepository.countJoinedParticipants(activity.getId());
+        long groupMembers = activityQueryRepository.countGroupMembers(groupId);
+        long overlapMembers = activityQueryRepository.countAlreadyJoinedMembersFromGroup(activity.getId(), groupId);
+        long expectedParticipants = currentParticipants + Math.max(0L, groupMembers - overlapMembers);
+
+        if (expectedParticipants > activity.getMaxMember()) {
+            throw new ActivityDomainException(ActivityErrorCode.ACTIVITY_CAPACITY_EXCEEDED);
+        }
+    }
+
+    private Group resolveJoinGroup (Member member, JoinActivityRequest request){
+        if (request.participationType() == JoinActivityRequest.ParticipationType.GROUP) {
+            Long groupId = request.groupId();
+            if (groupId == null) {
+                throw new ActivityDomainException(ActivityErrorCode.ACTIVITY_GROUP_NOT_FOUND);
+            }
+             Group group = groupRepository.findById(groupId)
+                   .orElseThrow(() -> new ActivityDomainException(ActivityErrorCode.ACTIVITY_GROUP_NOT_FOUND));
+
+            if (!activityQueryRepository.existsMemberInGroup(groupId, member.getId())) {
                 throw new ActivityDomainException(ActivityErrorCode.FORBIDDEN_ACTIVITY_ACCESS);
             }
-
-            return activity;
+            return group;
         }
 
-        private Activity getActivityOrThrow (Long activityId){
-            Activity activity = activityRepository.findById(activityId)
-                  .orElseThrow(() -> new ActivityDomainException(ActivityErrorCode.ACTIVITY_NOT_FOUND));
-            return activity;
+        Group singleMemberGroup = activityQueryRepository.findSingleMemberGroup(member.getId());
+        if (singleMemberGroup != null) {
+            return singleMemberGroup;
         }
 
-        private Activity getActivityForUpdateOrThrow (Long activityId){
-            return activityRepository.findByIdForUpdate(activityId)
-                  .orElseThrow(() -> new ActivityDomainException(ActivityErrorCode.ACTIVITY_NOT_FOUND));
+        Group createdGroup = groupRepository.save(Group.create(
+              PERSONAL_GROUP_NAME_PREFIX + member.getId(),
+              member.getName() + PERSONAL_GROUP_TITLE_SUFFIX,
+              PERSONAL_GROUP_CONTENT,
+              member,
+              null,
+              false,
+              1
+        ));
+        groupMemberRepository.save(GroupMember.create(member, createdGroup));
+        return createdGroup;
+    }
+
+    private void validateGroupJoinDuplication (Activity activity, Group group){
+        if (activityGroupRepository.existsByActivityAndGroupAndStatusIn(activity, group, ACTIVE_JOIN_STATUSES)) {
+            throw new ActivityDomainException(ActivityErrorCode.DUPLICATE_ACTIVITY_GROUP_JOIN);
+        }
+    }
+
+    private void validateMemberJoinDuplication (Long activityId, Long memberId, Long groupId){
+        if (activityQueryRepository.existsMemberInActivityByStatuses(activityId, memberId, ACTIVE_JOIN_STATUSES)) {
+            throw new ActivityDomainException(ActivityErrorCode.DUPLICATE_ACTIVITY_MEMBER_JOIN);
         }
 
-        private void saveActivityCategories (Activity activity, List < Long > categoryIds){
-            if (categoryIds == null || categoryIds.isEmpty()) {
-                return;
-            }
-
-            List<Category> categories = getCategoriesOrThrow(categoryIds);
-            categories.forEach(category ->
-                  activityCategoryRepository.save(ActivityCategory.create(activity, category))
-            );
+        long overlapMembers = activityQueryRepository.countAlreadyJoinedMembersFromGroup(activityId, groupId);
+        if (overlapMembers > 0) {
+            throw new ActivityDomainException(ActivityErrorCode.DUPLICATE_ACTIVITY_MEMBER_JOIN);
         }
+    }
 
-        private void replaceActivityCategories (Activity activity, List < Long > categoryIds){
-            if (categoryIds == null) {
-                return;
-            }
-
-            activityCategoryRepository.deleteAllByActivity(activity);
-            if (categoryIds.isEmpty()) {
-                return;
-            }
-
-            List<Category> categories = getCategoriesOrThrow(categoryIds);
-            categories.forEach(category ->
-                  activityCategoryRepository.save(ActivityCategory.create(activity, category))
-            );
+    private void validateHostCanLeave (Activity activity, Long memberId){
+        if (activity.getCreator() != null && activity.getCreator().getId().equals(memberId)) {
+            throw new ActivityDomainException(ActivityErrorCode.HOST_CANNOT_LEAVE_ACTIVITY);
         }
+    }
 
-        private List<Category> getCategoriesOrThrow (List < Long > categoryIds) {
-            List<Long> distinctCategoryIds = categoryIds.stream()
-                  .distinct()
-                  .toList();
-            List<Category> categories = categoryRepository.findAllById(distinctCategoryIds);
-
-            if (categories.size() != distinctCategoryIds.size()) {
-                throw new CategoryDomainException(CategoryErrorCode.CATEGORY_NOT_FOUND);
-            }
-
-            return categories;
+    private void validateImageFile (MultipartFile file){
+        if (file == null || file.isEmpty()) {
+            throw new ActivityDomainException(ActivityErrorCode.INVALID_ACTIVITY_THUMBNAIL_URL);
         }
+    }
 
-        private void validateCapacity (Activity activity, Long groupId){
-            long currentParticipants = activityQueryRepository.countJoinedParticipants(activity.getId());
-            long groupMembers = activityQueryRepository.countGroupMembers(groupId);
-            long overlapMembers = activityQueryRepository.countAlreadyJoinedMembersFromGroup(activity.getId(), groupId);
-            long expectedParticipants = currentParticipants + Math.max(0L, groupMembers - overlapMembers);
-
-            if (expectedParticipants > activity.getMaxMember()) {
-                throw new ActivityDomainException(ActivityErrorCode.ACTIVITY_CAPACITY_EXCEEDED);
-            }
-        }
-
-        private Group resolveJoinGroup (Member member, JoinActivityRequest request){
-            if (request.participationType() == JoinActivityRequest.ParticipationType.GROUP) {
-                Long groupId = request.groupId();
-                if (groupId == null) {
-                    throw new ActivityDomainException(ActivityErrorCode.ACTIVITY_GROUP_NOT_FOUND);
-                }
-
-                Group group = groupRepository.findById(groupId)
-                      .orElseThrow(() -> new ActivityDomainException(ActivityErrorCode.ACTIVITY_GROUP_NOT_FOUND));
-
-                if (!activityQueryRepository.existsMemberInGroup(groupId, member.getId())) {
-                    throw new ActivityDomainException(ActivityErrorCode.FORBIDDEN_ACTIVITY_ACCESS);
-                }
-                return group;
-            }
-
-            Group singleMemberGroup = activityQueryRepository.findSingleMemberGroup(member.getId());
-            if (singleMemberGroup != null) {
-                return singleMemberGroup;
-            }
-
-            Group createdGroup = groupRepository.save(Group.create(
-                  PERSONAL_GROUP_NAME_PREFIX + member.getId(),
-                  member.getName() + PERSONAL_GROUP_TITLE_SUFFIX,
-                  PERSONAL_GROUP_CONTENT,
-                  member,
-                  null,
-                  false,
-                  1
-            ));
-            groupMemberRepository.save(GroupMember.create(member, createdGroup));
-            return createdGroup;
-        }
-
-        private void validateGroupJoinDuplication (Activity activity, Group group){
-            if (activityGroupRepository.existsByActivityAndGroupAndStatusIn(activity, group, ACTIVE_JOIN_STATUSES)) {
-                throw new ActivityDomainException(ActivityErrorCode.DUPLICATE_ACTIVITY_GROUP_JOIN);
-            }
-        }
-
-        private void validateMemberJoinDuplication (Long activityId, Long memberId, Long groupId){
-            if (activityQueryRepository.existsMemberInActivityByStatuses(activityId, memberId, ACTIVE_JOIN_STATUSES)) {
-                throw new ActivityDomainException(ActivityErrorCode.DUPLICATE_ACTIVITY_MEMBER_JOIN);
-            }
-
-            long overlapMembers = activityQueryRepository.countAlreadyJoinedMembersFromGroup(activityId, groupId);
-            if (overlapMembers > 0) {
-                throw new ActivityDomainException(ActivityErrorCode.DUPLICATE_ACTIVITY_MEMBER_JOIN);
-            }
-        }
-
-        private void validateHostCanLeave (Activity activity, Long memberId){
-            if (activity.getCreator() != null && activity.getCreator().getId().equals(memberId)) {
-                throw new ActivityDomainException(ActivityErrorCode.HOST_CANNOT_LEAVE_ACTIVITY);
-            }
-        }
-        private void validateImageFile (MultipartFile file){
-            if (file == null || file.isEmpty()) {
-                throw new ActivityDomainException(ActivityErrorCode.INVALID_ACTIVITY_THUMBNAIL_URL);
-            }
-        }
-
-        private String buildPublicUrl (String imagePath){
-            String normalizedBase = uploadPublicBaseUrl.endsWith("/")
-                  ? uploadPublicBaseUrl.substring(0, uploadPublicBaseUrl.length() - 1)
-                  : uploadPublicBaseUrl;
-            return normalizedBase + "/" + imagePath;
-        }
+    private String buildPublicUrl (String imagePath){
+        String normalizedBase = uploadPublicBaseUrl.endsWith("/")
+              ? uploadPublicBaseUrl.substring(0, uploadPublicBaseUrl.length() - 1)
+              : uploadPublicBaseUrl;
+        return normalizedBase + "/" + imagePath;
     }
 }
