@@ -5,6 +5,7 @@ import com.awp.mgw.activity.controller.dto.request.JoinActivityRequest;
 import com.awp.mgw.activity.controller.dto.request.UpdateActivityRequest;
 import com.awp.mgw.activity.controller.dto.response.ActivityDetailResponse;
 import com.awp.mgw.activity.controller.dto.response.ActivityIdResponse;
+import com.awp.mgw.activity.controller.dto.response.ActivityImageUploadResponse;
 import com.awp.mgw.activity.controller.dto.response.ActivityListResponse;
 import com.awp.mgw.activity.usecase.CreateActivityUseCase;
 import com.awp.mgw.activity.usecase.DeleteActivityUseCase;
@@ -14,11 +15,13 @@ import com.awp.mgw.activity.usecase.JoinActivityUseCase;
 import com.awp.mgw.activity.usecase.LeaveActivityUseCase;
 import com.awp.mgw.activity.usecase.LikeActivityUseCase;
 import com.awp.mgw.activity.usecase.UnlikeActivityUseCase;
+import com.awp.mgw.activity.usecase.UploadActivityImageUseCase;
 import com.awp.mgw.activity.usecase.UpdateActivityUseCase;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -27,7 +30,9 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/v1/activities")
@@ -44,6 +49,7 @@ public class ActivityController {
     private final LeaveActivityUseCase leaveActivityUseCase;
     private final LikeActivityUseCase likeActivityUseCase;
     private final UnlikeActivityUseCase unlikeActivityUseCase;
+    private final UploadActivityImageUseCase uploadActivityImageUseCase;
 
     @PostMapping
     @Operation(summary = "활동 생성", description = "신규 활동을 생성합니다.")
@@ -128,5 +134,12 @@ public class ActivityController {
         @PathVariable Long activityId
     ) {
         return unlikeActivityUseCase.unlikeActivity(memberId, activityId);
+    @PostMapping(value = "/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "활동 이미지 업로드", description = "활동 이미지를 업로드하고 저장 경로를 반환합니다.")
+    public ActivityImageUploadResponse uploadActivityImage(
+        @RequestParam Long memberId,
+        @RequestPart("file") MultipartFile file
+    ) {
+        return uploadActivityImageUseCase.uploadActivityImage(memberId, file);
     }
 }
