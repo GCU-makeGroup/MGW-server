@@ -20,6 +20,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static com.awp.mgw.category.domain.QCategory.category;
 import static com.awp.mgw.group.domain.QComment.comment;
@@ -69,6 +71,38 @@ public class GroupQueryRepository {
                 .selectFrom(group)
                 .distinct()
                 .where(group.id.in(groupIds), accessibleGroup(memberId))
+                .orderBy(orderSpecifiers)
+                .fetch();
+
+        return new PageImpl<>(groups, pageable, total != null ? total : 0);
+    }
+
+    public Page<Group> findMyGroupList(Long memberId, Pageable pageable) {
+        OrderSpecifier<?>[] orderSpecifiers = toOrderSpecifiers(pageable.getSort());
+
+        List<Long> groupIds = queryFactory
+                .select(group.id)
+                .from(groupMember)
+                .join(groupMember.group, group)
+                .where(groupMember.member.id.eq(memberId))
+                .orderBy(orderSpecifiers)
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .fetch();
+
+        Long total = queryFactory
+                .select(groupMember.id.count())
+                .from(groupMember)
+                .where(groupMember.member.id.eq(memberId))
+                .fetchOne();
+
+        if (groupIds.isEmpty()) {
+            return new PageImpl<>(List.of(), pageable, total != null ? total : 0);
+        }
+
+        List<Group> groups = queryFactory
+                .selectFrom(group)
+                .where(group.id.in(groupIds))
                 .orderBy(orderSpecifiers)
                 .fetch();
 
@@ -141,6 +175,16 @@ public class GroupQueryRepository {
         });
 
         return currentMemberCountByGroupId;
+    }
+
+    public Set<Long> findGroupMemberIdsByGroupId(Long groupId) {
+        return queryFactory
+                .select(groupMember.member.id)
+                .from(groupMember)
+                .where(groupMember.group.id.eq(groupId))
+                .fetch()
+                .stream()
+                .collect(Collectors.toSet());
     }
 
     private BooleanExpression categoryIdIn(List<Long> categoryIds) {
