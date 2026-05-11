@@ -43,7 +43,10 @@ public class SecurityConfig {
                 .requestMatchers(
                       "/api/v1/auth/signup",
                       "/api/v1/auth/login",
-                      "/api/v1/auth/reissue"
+                      "/api/v1/auth/token/reissue",
+                      "/api/v1/auth/email-verification/send",
+                      "/api/v1/auth/email-verification/resend",
+                      "/api/v1/auth/email-verification/verify"
                 ).permitAll()
                 .anyRequest().authenticated()
           )
