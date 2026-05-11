@@ -2,10 +2,14 @@ package com.awp.mgw.group.service;
 
 import com.awp.mgw.activity.port.ActivityGroupRepository;
 import com.awp.mgw.category.port.CategoryRepository;
+import com.awp.mgw.group.controller.dto.request.CreateCommentRequest;
+import com.awp.mgw.group.controller.dto.response.CreateCommentResponse;
+import com.awp.mgw.group.domain.Comment;
 import com.awp.mgw.group.domain.Group;
 import com.awp.mgw.group.domain.GroupMember;
 import com.awp.mgw.group.domain.exception.GroupDomainException;
 import com.awp.mgw.group.domain.exception.GroupErrorCode;
+import com.awp.mgw.group.port.CommentRepository;
 import com.awp.mgw.group.port.GroupCategoryRepository;
 import com.awp.mgw.group.port.GroupMemberRepository;
 import com.awp.mgw.group.port.GroupRepository;
@@ -34,6 +38,9 @@ class GroupCommandServiceTest {
     private GroupRepository groupRepository;
 
     @Mock
+    private CommentRepository commentRepository;
+
+    @Mock
     private GroupMemberRepository groupMemberRepository;
 
     @Mock
@@ -50,6 +57,75 @@ class GroupCommandServiceTest {
 
     @InjectMocks
     private GroupCommandService groupCommandService;
+
+    @Test
+    void createCommentAllowsNonGroupMember() {
+        Member member = member(2L);
+        Group group = group(10L, member(1L));
+        when(memberRepository.findById(member.getId())).thenReturn(Optional.of(member));
+        when(groupRepository.findById(group.getId())).thenReturn(Optional.of(group));
+        when(groupMemberRepository.existsByMember_IdAndGroup_Id(member.getId(), group.getId())).thenReturn(false);
+        when(commentRepository.save(any(Comment.class))).thenAnswer(invocation -> {
+            Comment comment = invocation.getArgument(0);
+            ReflectionTestUtils.setField(comment, "id", 100L);
+            return comment;
+        });
+
+        CreateCommentResponse response = groupCommandService.createComment(
+                member.getId(),
+                group.getId(),
+                new CreateCommentRequest("hello", null)
+        );
+
+        verify(commentRepository).save(any(Comment.class));
+        assertThat(response.commentId()).isEqualTo(100L);
+        assertThat(response.authorGroupMember()).isFalse();
+    }
+
+    @Test
+    void createCommentReturnsAuthorGroupMemberWhenWriterBelongsToGroup() {
+        Member member = member(2L);
+        Group group = group(10L, member(1L));
+        when(memberRepository.findById(member.getId())).thenReturn(Optional.of(member));
+        when(groupRepository.findById(group.getId())).thenReturn(Optional.of(group));
+        when(groupMemberRepository.existsByMember_IdAndGroup_Id(member.getId(), group.getId())).thenReturn(true);
+        when(commentRepository.save(any(Comment.class))).thenAnswer(invocation -> {
+            Comment comment = invocation.getArgument(0);
+            ReflectionTestUtils.setField(comment, "id", 101L);
+            return comment;
+        });
+
+        CreateCommentResponse response = groupCommandService.createComment(
+                member.getId(),
+                group.getId(),
+                new CreateCommentRequest("member comment", null)
+        );
+
+        verify(commentRepository).save(any(Comment.class));
+        assertThat(response.commentId()).isEqualTo(101L);
+        assertThat(response.authorGroupMember()).isTrue();
+    }
+
+    @Test
+    void createCommentThrowsWhenParentCommentBelongsToOtherGroup() {
+        Member member = member(2L);
+        Group group = group(10L, member(1L));
+        Group otherGroup = group(20L, member(3L));
+        Comment parent = comment(100L, otherGroup, member);
+        when(memberRepository.findById(member.getId())).thenReturn(Optional.of(member));
+        when(groupRepository.findById(group.getId())).thenReturn(Optional.of(group));
+        when(commentRepository.findById(parent.getId())).thenReturn(Optional.of(parent));
+
+        assertThatThrownBy(() -> groupCommandService.createComment(
+                member.getId(),
+                group.getId(),
+                new CreateCommentRequest("reply", parent.getId())
+        ))
+                .isInstanceOf(GroupDomainException.class)
+                .hasMessage(GroupErrorCode.INVALID_COMMENT_PARENT.getMessage());
+
+        verify(commentRepository, never()).save(any(Comment.class));
+    }
 
     @Test
     void joinGroupSavesMemberWhenGroupHasCapacity() {
@@ -207,7 +283,7 @@ class GroupCommandServiceTest {
     }
 
     private Member member(Long id) {
-        Member member = Member.create("member" + id + "@test.com", "member" + id, null, null);
+        Member member = Member.create("member" + id + "@test.com", "password", "member" + id, null, null);
         ReflectionTestUtils.setField(member, "id", id);
         return member;
     }
@@ -220,5 +296,11 @@ class GroupCommandServiceTest {
         Group group = Group.create("group", "title", "content", owner, null, isPublic, capacity);
         ReflectionTestUtils.setField(group, "id", id);
         return group;
+    }
+
+    private Comment comment(Long id, Group group, Member member) {
+        Comment comment = Comment.create(group, member, null, "content");
+        ReflectionTestUtils.setField(comment, "id", id);
+        return comment;
     }
 }

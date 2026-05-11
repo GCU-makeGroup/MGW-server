@@ -189,6 +189,9 @@ public class ActivityCommandService implements
 
         activityLikeRepository.delete(activityLike);
         return ActivityIdResponse.from(activityId);
+    }
+
+    @Override
     public ActivityImageUploadResponse uploadActivityImage(Long memberId, MultipartFile file) {
         getMemberOrThrow(memberId);
         validateImageFile(file);
