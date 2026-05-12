@@ -3,6 +3,7 @@ package com.awp.mgw.mypage.service;
 import com.awp.mgw.activity.port.ActivityQueryRepository;
 import com.awp.mgw.group.port.GroupMemberRepository;
 import com.awp.mgw.member.domain.Member;
+import com.awp.mgw.member.domain.exception.MemberErrorCode;
 import com.awp.mgw.member.port.MemberRepository;
 import com.awp.mgw.mypage.controller.dto.response.MyPageCalendarResponse;
 import com.awp.mgw.mypage.controller.dto.response.MyPageMainResponse;
@@ -34,7 +35,7 @@ public class MyPageQueryService implements GetMyPageMainUseCase {
   @Override
   public MyPageMainResponse getMyPageMain(Long memberId, YearMonth yearMonth) {
     Member member = memberRepository.findById(memberId)
-          .orElseThrow(() -> new RuntimeException("회원이 존재하지 않습니다."));
+          .orElseThrow(() -> new MemberDomainException(MemberErrorCode.MEMBER_NOT_FOUND);
 
     long activityCount = activityQueryRepository.countJoinedActivities(memberId);
     long groupCount = groupMemberRepository.countByMember_Id(memberId);
