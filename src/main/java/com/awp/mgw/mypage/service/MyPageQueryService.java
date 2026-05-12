@@ -33,8 +33,30 @@ public class MyPageQueryService implements GetMyPageMainUseCase {
   private final GroupMemberRepository groupMemberRepository;
   private final GetMonthlyScheduleUseCase getMonthlyScheduleUseCase;
 
+  private LocalDate resolveSelectedDate(YearMonth yearMonth, LocalDate selectedDate) {
+    if (selectedDate != null) {
+      if (!YearMonth.from(selectedDate).equals(yearMonth)) {
+        throw new IllegalArgumentException("선택한 날짜는 요청한 연월에 포함되어야 합니다.");
+      }
+
+      return selectedDate;
+    }
+
+    LocalDate today = LocalDate.now();
+
+    if (YearMonth.from(today).equals(yearMonth)) {
+      return today;
+    }
+
+    return yearMonth.atDay(1);
+  }
+
   @Override
-  public MyPageMainResponse getMyPageMain(Long memberId, YearMonth yearMonth) {
+  public MyPageMainResponse getMyPageMain(
+        Long memberId,
+        YearMonth yearMonth,
+        LocalDate selectedDate
+  ) {
     Member member = memberRepository.findById(memberId)
           .orElseThrow(() -> new MemberDomainException(MemberErrorCode.MEMBER_NOT_FOUND));
 
@@ -59,7 +81,7 @@ public class MyPageQueryService implements GetMyPageMainUseCase {
     MyPageCalendarResponse calendar = new MyPageCalendarResponse(
           yearMonth.getYear(),
           yearMonth.getMonthValue(),
-          LocalDate.now(),
+          resolveSelectedDate(yearMonth, selectedDate),
           schedules
     );
 

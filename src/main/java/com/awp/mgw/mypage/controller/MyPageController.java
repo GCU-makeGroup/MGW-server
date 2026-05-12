@@ -11,6 +11,7 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import org.springframework.validation.annotation.Validated;
 
+import java.time.LocalDate;
 import java.time.YearMonth;
 
 @Validated
@@ -29,11 +30,14 @@ public class MyPageController {
 
         @Min(value = 1, message = "월은 1 이상이어야 합니다.")
         @Max(value = 12, message = "월은 12 이하여야 합니다.")
-        @RequestParam int month
+        @RequestParam int month,
+
+        @RequestParam(required = false) LocalDate selectedDate
   ) {
     return getMyPageMainUseCase.getMyPageMain(
           memberId,
-          YearMonth.of(year, month)
+          YearMonth.of(year, month),
+          selectedDate
     );
   }
 }
