@@ -23,7 +23,6 @@ public class MyPageController {
   @GetMapping("/api/v1/mypage")
   public MyPageMainResponse getMyPageMain(
         @AuthenticationPrincipal Long memberId,
-        @RequestParam int year,
 
         @Min(value = 2000, message = "연도는 2000년 이상이어야 합니다.")
         @RequestParam int year,
