@@ -1,9 +1,12 @@
 package com.awp.mgw.group.controller;
 
+import com.awp.mgw.group.controller.dto.request.CreateCommentRequest;
 import com.awp.mgw.group.controller.dto.request.CreateGroupRequest;
+import com.awp.mgw.group.controller.dto.response.CreateCommentResponse;
 import com.awp.mgw.group.controller.dto.response.CreateGroupResponse;
 import com.awp.mgw.group.controller.dto.response.GetGroupDetailResponse;
 import com.awp.mgw.group.controller.dto.response.GetGroupListResponse;
+import com.awp.mgw.group.usecase.command.CreateCommentUseCase;
 import com.awp.mgw.group.usecase.command.CreateGroupUseCase;
 import com.awp.mgw.group.usecase.command.DeleteGroupUseCase;
 import com.awp.mgw.group.usecase.command.LeaveGroupUseCase;
@@ -11,6 +14,7 @@ import com.awp.mgw.group.usecase.command.JoinGroupUseCase;
 import com.awp.mgw.group.usecase.command.UpdateGroupUseCase;
 import com.awp.mgw.group.usecase.query.GetGroupDetailUseCase;
 import com.awp.mgw.group.usecase.query.GetGroupListUseCase;
+import com.awp.mgw.group.usecase.query.GetMyGroupListUseCase;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -30,11 +34,13 @@ import java.util.List;
 public class GroupController {
 
     private final CreateGroupUseCase createGroupUseCase;
+    private final CreateCommentUseCase createCommentUseCase;
     private final UpdateGroupUseCase updateGroupUseCase;
     private final JoinGroupUseCase joinGroupUseCase;
     private final DeleteGroupUseCase deleteGroupUseCase;
     private final LeaveGroupUseCase leaveGroupUseCase;
     private final GetGroupListUseCase getGroupListUseCase;
+    private final GetMyGroupListUseCase getMyGroupListUseCase;
     private final GetGroupDetailUseCase getGroupDetailUseCase;
 
     @PostMapping
@@ -82,6 +88,20 @@ public class GroupController {
         return getGroupListUseCase.getGroupList(memberId, categoryIds, pageable);
     }
 
+    @GetMapping("/me")
+    @Operation(
+            summary = "내가 속한 그룹 목록 조회",
+            description = "요청 회원이 group_member로 참여 중인 그룹 목록을 조회합니다. 응답 형식은 그룹 목록 조회와 동일합니다."
+    )
+    public GetGroupListResponse getMyGroupList(
+            @Parameter(description = "조회 요청 회원 ID", example = "1")
+            @RequestParam Long memberId,
+            @Parameter(description = "페이징 및 정렬 정보. 예: sort=createdAt,desc / sort=name,asc / sort=capacity,desc")
+            @PageableDefault(size = 10, sort = "updatedAt", direction = Sort.Direction.DESC) Pageable pageable
+    ) {
+        return getMyGroupListUseCase.getMyGroupList(memberId, pageable);
+    }
+
     @GetMapping("/{groupId}")
     @Operation(
             summary = "그룹 상세 조회",
@@ -108,6 +128,21 @@ public class GroupController {
             @PathVariable Long groupId
     ) {
         joinGroupUseCase.joinGroup(memberId, groupId);
+    }
+
+    @PostMapping("/{groupId}/comments")
+    @Operation(
+            summary = "댓글 작성",
+            description = "회원이 그룹에 댓글을 작성합니다. parentId를 전달하면 같은 그룹 댓글의 대댓글로 작성됩니다."
+    )
+    public CreateCommentResponse createComment(
+            @Parameter(description = "댓글 작성 회원 ID", example = "1")
+            @RequestParam Long memberId,
+            @Parameter(description = "댓글을 작성할 그룹 ID", example = "10")
+            @PathVariable Long groupId,
+            @Valid @RequestBody CreateCommentRequest request
+    ) {
+        return createCommentUseCase.createComment(memberId, groupId, request);
     }
 
     @DeleteMapping("/{groupId}")

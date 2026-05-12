@@ -192,7 +192,7 @@ public class ActivityCommandService implements
     }
 
     @Override
-    public ActivityImageUploadResponse uploadActivityImage (Long memberId, MultipartFile file){
+    public ActivityImageUploadResponse uploadActivityImage(Long memberId, MultipartFile file) {
         getMemberOrThrow(memberId);
         validateImageFile(file);
         String thumbnailPath = fileUtil.saveFile(file, "activities");

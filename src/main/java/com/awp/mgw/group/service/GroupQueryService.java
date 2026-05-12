@@ -11,6 +11,7 @@ import com.awp.mgw.group.port.CommentRepository;
 import com.awp.mgw.group.port.GroupQueryRepository;
 import com.awp.mgw.group.usecase.query.GetGroupDetailUseCase;
 import com.awp.mgw.group.usecase.query.GetGroupListUseCase;
+import com.awp.mgw.group.usecase.query.GetMyGroupListUseCase;
 import com.awp.mgw.member.domain.Member;
 import com.awp.mgw.member.domain.exception.MemberDomainException;
 import com.awp.mgw.member.domain.exception.MemberErrorCode;
@@ -24,12 +25,13 @@ import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class GroupQueryService implements GetGroupListUseCase, GetGroupDetailUseCase {
+public class GroupQueryService implements GetGroupListUseCase, GetMyGroupListUseCase, GetGroupDetailUseCase {
 
     private final GroupQueryRepository groupQueryRepository;
     private final CommentRepository commentRepository;
@@ -39,18 +41,18 @@ public class GroupQueryService implements GetGroupListUseCase, GetGroupDetailUse
     public GetGroupListResponse getGroupList(Long memberId, List<Long> categoryIds, Pageable pageable) {
         getMemberOrThrow(memberId);
 
-        // 목록 대상 그룹만 먼저 가져온 뒤, 댓글 수와 카테고리는 groupId 기준 Map으로 한 번에 붙임
         Page<Group> groupPage = groupQueryRepository.findGroupList(memberId, categoryIds, pageable);
-        Map<Long, Integer> commentCountByGroupId = getCommentCountByGroupId(groupPage.getContent());
-        Map<Long, Integer> currentMemberCountByGroupId = getCurrentMemberCountByGroupId(groupPage.getContent());
-        Map<Long, List<Category>> categoriesByGroupId = getCategoriesByGroupId(groupPage.getContent());
 
-        return GetGroupListResponse.from(
-                groupPage,
-                commentCountByGroupId,
-                currentMemberCountByGroupId,
-                categoriesByGroupId
-        );
+        return toGroupListResponse(groupPage);
+    }
+
+    @Override
+    public GetGroupListResponse getMyGroupList(Long memberId, Pageable pageable) {
+        getMemberOrThrow(memberId);
+
+        Page<Group> groupPage = groupQueryRepository.findMyGroupList(memberId, pageable);
+
+        return toGroupListResponse(groupPage);
     }
 
     @Override
@@ -67,13 +69,28 @@ public class GroupQueryService implements GetGroupListUseCase, GetGroupDetailUse
         Integer commentCount = getCommentCountByGroupId(List.of(group))
                 .getOrDefault(groupId, 0);
         List<Comment> comments = groupQueryRepository.findCommentsByGroupId(groupId);
+        Set<Long> groupMemberIds = groupQueryRepository.findGroupMemberIdsByGroupId(groupId);
 
-        return GetGroupDetailResponse.from(group, categories, currentMemberCount, commentCount, comments);
+        return GetGroupDetailResponse.from(group, categories, currentMemberCount, commentCount, comments, groupMemberIds);
     }
 
     private Member getMemberOrThrow(Long memberId) {
         return memberRepository.findById(memberId)
                 .orElseThrow(() -> new MemberDomainException(MemberErrorCode.MEMBER_NOT_FOUND));
+    }
+
+    private GetGroupListResponse toGroupListResponse(Page<Group> groupPage) {
+        // 목록 대상 그룹만 먼저 가져온 뒤, 댓글 수와 카테고리는 groupId 기준 Map으로 한 번에 붙임
+        Map<Long, Integer> commentCountByGroupId = getCommentCountByGroupId(groupPage.getContent());
+        Map<Long, Integer> currentMemberCountByGroupId = getCurrentMemberCountByGroupId(groupPage.getContent());
+        Map<Long, List<Category>> categoriesByGroupId = getCategoriesByGroupId(groupPage.getContent());
+
+        return GetGroupListResponse.from(
+                groupPage,
+                commentCountByGroupId,
+                currentMemberCountByGroupId,
+                categoriesByGroupId
+        );
     }
 
     private Map<Long, Integer> getCommentCountByGroupId(List<Group> groups) {

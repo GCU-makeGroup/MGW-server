@@ -7,6 +7,7 @@ import com.awp.mgw.member.domain.Member;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 
 public record GetGroupDetailResponse(
         Long id,
@@ -29,7 +30,8 @@ public record GetGroupDetailResponse(
             List<Category> categories,
             Integer currentMemberCount,
             Integer commentCount,
-            List<Comment> comments
+            List<Comment> comments,
+            Set<Long> groupMemberIds
     ) {
         return new GetGroupDetailResponse(
                 group.getId(),
@@ -48,7 +50,7 @@ public record GetGroupDetailResponse(
                 currentMemberCount,
                 commentCount,
                 comments.stream()
-                        .map(CommentInfo::from)
+                        .map(comment -> CommentInfo.from(comment, groupMemberIds))
                         .toList()
         );
     }
@@ -73,15 +75,19 @@ public record GetGroupDetailResponse(
             Long id,
             Long parentId,
             AuthorInfo author,
+            Boolean authorGroupMember,
             String content,
             LocalDateTime createdAt,
             LocalDateTime updatedAt
     ) {
-        public static CommentInfo from(Comment comment) {
+        public static CommentInfo from(Comment comment, Set<Long> groupMemberIds) {
+            Member author = comment.getMember();
+
             return new CommentInfo(
                     comment.getId(),
                     comment.getParent() != null ? comment.getParent().getId() : null,
-                    AuthorInfo.from(comment.getMember()),
+                    AuthorInfo.from(author),
+                    author != null && groupMemberIds.contains(author.getId()),
                     comment.getContent(),
                     comment.getCreatedAt(),
                     comment.getUpdatedAt()
