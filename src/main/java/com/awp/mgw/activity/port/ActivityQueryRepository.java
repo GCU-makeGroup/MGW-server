@@ -405,7 +405,8 @@ public class ActivityQueryRepository {
               .where(
                     activityGroup.status.eq(ActivityGroupStatus.JOIN),
                     groupMember.member.id.eq(memberId),
-                    activity.schedule.between(start, end)
+                    activity.schedule.goe(start),
+                    activity.schedule.lt(end)
               )
               .distinct()
               .fetch()
