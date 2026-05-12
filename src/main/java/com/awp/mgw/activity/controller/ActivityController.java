@@ -135,6 +135,7 @@ public class ActivityController {
     ) {
         return unlikeActivityUseCase.unlikeActivity(memberId, activityId);
     }
+
     @PostMapping(value = "/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "활동 이미지 업로드", description = "활동 이미지를 업로드하고 저장 경로를 반환합니다.")
     public ActivityImageUploadResponse uploadActivityImage (
