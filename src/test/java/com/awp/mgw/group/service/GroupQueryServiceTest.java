@@ -98,6 +98,29 @@ class GroupQueryServiceTest {
         assertThat(response.groups().get(0).currentMemberCount()).isEqualTo(2);
     }
 
+    @Test
+    void searchGroupListReturnsGroupListResponse() {
+        Member requester = member(1L);
+        Group group = group(10L, requester);
+        Pageable pageable = PageRequest.of(0, 10);
+        String keyword = "모 각 코";
+        when(memberRepository.findById(requester.getId())).thenReturn(Optional.of(requester));
+        when(groupQueryRepository.findGroupListByName(requester.getId(), keyword, pageable))
+                .thenReturn(new PageImpl<>(List.of(group), pageable, 1));
+        when(commentRepository.countCommentsByGroupIds(List.of(group.getId()))).thenReturn(List.of(commentCount(group.getId(), 1L)));
+        when(groupQueryRepository.findCurrentMemberCountsByGroupIds(List.of(group.getId())))
+                .thenReturn(Map.of(group.getId(), 4));
+        when(groupQueryRepository.findCategoriesByGroupIds(List.of(group.getId()))).thenReturn(Map.of());
+
+        GetGroupListResponse response = groupQueryService.searchGroupList(requester.getId(), keyword, pageable);
+
+        verify(groupQueryRepository).findGroupListByName(requester.getId(), keyword, pageable);
+        assertThat(response.groups()).hasSize(1);
+        assertThat(response.groups().get(0).id()).isEqualTo(group.getId());
+        assertThat(response.groups().get(0).commentCount()).isEqualTo(1);
+        assertThat(response.groups().get(0).currentMemberCount()).isEqualTo(4);
+    }
+
     private Member member(Long id) {
         Member member = Member.create("member" + id + "@test.com", "password", "member" + id, null, null);
         ReflectionTestUtils.setField(member, "id", id);
