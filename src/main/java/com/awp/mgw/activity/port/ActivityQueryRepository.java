@@ -19,6 +19,7 @@ import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
+import java.time.LocalDate;
 
 import java.time.Instant;
 import java.util.Collection;
@@ -138,6 +139,21 @@ public class ActivityQueryRepository {
                 activityGroup.status.eq(ActivityGroupStatus.JOIN)
             )
             .fetchOne();
+
+        return count == null ? 0L : count;
+    }
+
+    public long countJoinedActivities(Long memberId) {
+        Long count = queryFactory
+              .select(activityGroup.activity.id.countDistinct())
+              .from(activityGroup)
+              .join(activityGroup.group, group)
+              .join(group.groupMembers, groupMember)
+              .where(
+                    activityGroup.status.eq(ActivityGroupStatus.JOIN),
+                    groupMember.member.id.eq(memberId)
+              )
+              .fetchOne();
 
         return count == null ? 0L : count;
     }
@@ -376,5 +392,26 @@ public class ActivityQueryRepository {
         String name,
         String profileImg
     ) {
+    }
+
+    // schedule에 사용될 activity 일정
+    public List<LocalDate> findMonthlyScheduleDates(Long memberId, Instant start, Instant end) {
+        return queryFactory
+              .select(activity.schedule)
+              .from(activityGroup)
+              .join(activityGroup.activity, activity)
+              .join(activityGroup.group, group)
+              .join(group.groupMembers, groupMember)
+              .where(
+                    activityGroup.status.eq(ActivityGroupStatus.JOIN),
+                    groupMember.member.id.eq(memberId),
+                    activity.schedule.goe(start),
+                    activity.schedule.lt(end)
+              )
+              .distinct()
+              .fetch()
+              .stream()
+              .map(instant -> instant.atZone(java.time.ZoneId.systemDefault()).toLocalDate())
+              .toList();
     }
 }

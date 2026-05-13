@@ -62,7 +62,7 @@ public class ActivityCommandService implements
     UploadActivityImageUseCase {
 
     private static final List<ActivityGroupStatus> ACTIVE_JOIN_STATUSES =
-        Arrays.asList(ActivityGroupStatus.PENDING, ActivityGroupStatus.JOIN);
+          Arrays.asList(ActivityGroupStatus.PENDING, ActivityGroupStatus.JOIN);
     private static final String PERSONAL_GROUP_NAME_PREFIX = "personal-member-";
     private static final String PERSONAL_GROUP_TITLE_SUFFIX = "님의 1인 활동 그룹";
     private static final String PERSONAL_GROUP_CONTENT = "자동 생성된 개인 참여 그룹";
@@ -85,14 +85,14 @@ public class ActivityCommandService implements
         Member member = getMemberOrThrow(memberId);
 
         Activity activity = Activity.create(
-            request.title(),
-            member,
-            request.description(),
-            request.maxMembers(),
-            request.thumbnailUrl(),
-            request.location(),
-            request.schedule().toInstant(),
-            request.openchatUrl()
+              request.title(),
+              member,
+              request.description(),
+              request.maxMembers(),
+              request.thumbnailUrl(),
+              request.location(),
+              request.schedule().toInstant(),
+              request.openchatUrl()
         );
 
         Activity savedActivity = activityRepository.save(activity);
@@ -106,13 +106,13 @@ public class ActivityCommandService implements
         Activity activity = getOwnedActivityOrThrow(activityId, memberId);
 
         activity.update(
-            request.title(),
-            request.description(),
-            request.maxMembers(),
-            request.thumbnailUrl(),
-            request.location(),
-            request.schedule().toInstant(),
-            request.openchatUrl()
+              request.title(),
+              request.description(),
+              request.maxMembers(),
+              request.thumbnailUrl(),
+              request.location(),
+              request.schedule().toInstant(),
+              request.openchatUrl()
         );
 
         replaceActivityCategories(activity, request.categoryIds());
@@ -150,9 +150,9 @@ public class ActivityCommandService implements
         validateHostCanLeave(activity, memberId);
 
         int deletedCount = activityGroupRepository.deleteByActivityIdAndMemberIdAndStatusIn(
-            activityId,
-            memberId,
-            ACTIVE_JOIN_STATUSES
+              activityId,
+              memberId,
+              ACTIVE_JOIN_STATUSES
         );
 
         if (deletedCount == 0) {
@@ -185,7 +185,7 @@ public class ActivityCommandService implements
         Activity activity = getActivityOrThrow(activityId);
 
         ActivityLike activityLike = activityLikeRepository.findByMemberAndActivity(member, activity)
-            .orElseThrow(() -> new ActivityDomainException(ActivityErrorCode.ACTIVITY_LIKE_NOT_FOUND));
+              .orElseThrow(() -> new ActivityDomainException(ActivityErrorCode.ACTIVITY_LIKE_NOT_FOUND));
 
         activityLikeRepository.delete(activityLike);
         return ActivityIdResponse.from(activityId);
@@ -199,43 +199,42 @@ public class ActivityCommandService implements
         return ActivityImageUploadResponse.from(buildPublicUrl(thumbnailPath));
     }
 
-    private Member getMemberOrThrow(Long memberId) {
+    private Member getMemberOrThrow (Long memberId){
         return memberRepository.findById(memberId)
-            .orElseThrow(() -> new MemberDomainException(MemberErrorCode.MEMBER_NOT_FOUND));
+              .orElseThrow(() -> new MemberDomainException(MemberErrorCode.MEMBER_NOT_FOUND));
     }
 
-    private Activity getOwnedActivityOrThrow(Long activityId, Long memberId) {
+    private Activity getOwnedActivityOrThrow (Long activityId, Long memberId){
         Activity activity = getActivityOrThrow(activityId);
         if (activity.getCreator() == null || !activity.getCreator().getId().equals(memberId)) {
             throw new ActivityDomainException(ActivityErrorCode.FORBIDDEN_ACTIVITY_ACCESS);
         }
-
         return activity;
     }
 
-    private Activity getActivityOrThrow(Long activityId) {
+    private Activity getActivityOrThrow (Long activityId){
         Activity activity = activityRepository.findById(activityId)
-            .orElseThrow(() -> new ActivityDomainException(ActivityErrorCode.ACTIVITY_NOT_FOUND));
+              .orElseThrow(() -> new ActivityDomainException(ActivityErrorCode.ACTIVITY_NOT_FOUND));
         return activity;
     }
 
-    private Activity getActivityForUpdateOrThrow(Long activityId) {
+    private Activity getActivityForUpdateOrThrow (Long activityId){
         return activityRepository.findByIdForUpdate(activityId)
-            .orElseThrow(() -> new ActivityDomainException(ActivityErrorCode.ACTIVITY_NOT_FOUND));
+              .orElseThrow(() -> new ActivityDomainException(ActivityErrorCode.ACTIVITY_NOT_FOUND));
     }
 
-    private void saveActivityCategories(Activity activity, List<Long> categoryIds) {
+    private void saveActivityCategories (Activity activity, List < Long > categoryIds){
         if (categoryIds == null || categoryIds.isEmpty()) {
             return;
         }
 
         List<Category> categories = getCategoriesOrThrow(categoryIds);
         categories.forEach(category ->
-            activityCategoryRepository.save(ActivityCategory.create(activity, category))
+              activityCategoryRepository.save(ActivityCategory.create(activity, category))
         );
     }
 
-    private void replaceActivityCategories(Activity activity, List<Long> categoryIds) {
+    private void replaceActivityCategories (Activity activity, List < Long > categoryIds){
         if (categoryIds == null) {
             return;
         }
@@ -247,14 +246,14 @@ public class ActivityCommandService implements
 
         List<Category> categories = getCategoriesOrThrow(categoryIds);
         categories.forEach(category ->
-            activityCategoryRepository.save(ActivityCategory.create(activity, category))
+              activityCategoryRepository.save(ActivityCategory.create(activity, category))
         );
     }
 
-    private List<Category> getCategoriesOrThrow(List<Long> categoryIds) {
+    private List<Category> getCategoriesOrThrow (List < Long > categoryIds) {
         List<Long> distinctCategoryIds = categoryIds.stream()
-            .distinct()
-            .toList();
+              .distinct()
+              .toList();
         List<Category> categories = categoryRepository.findAllById(distinctCategoryIds);
 
         if (categories.size() != distinctCategoryIds.size()) {
@@ -264,7 +263,7 @@ public class ActivityCommandService implements
         return categories;
     }
 
-    private void validateCapacity(Activity activity, Long groupId) {
+    private void validateCapacity (Activity activity, Long groupId){
         long currentParticipants = activityQueryRepository.countJoinedParticipants(activity.getId());
         long groupMembers = activityQueryRepository.countGroupMembers(groupId);
         long overlapMembers = activityQueryRepository.countAlreadyJoinedMembersFromGroup(activity.getId(), groupId);
@@ -275,15 +274,14 @@ public class ActivityCommandService implements
         }
     }
 
-    private Group resolveJoinGroup(Member member, JoinActivityRequest request) {
+    private Group resolveJoinGroup (Member member, JoinActivityRequest request){
         if (request.participationType() == JoinActivityRequest.ParticipationType.GROUP) {
             Long groupId = request.groupId();
             if (groupId == null) {
                 throw new ActivityDomainException(ActivityErrorCode.ACTIVITY_GROUP_NOT_FOUND);
             }
-
-            Group group = groupRepository.findById(groupId)
-                .orElseThrow(() -> new ActivityDomainException(ActivityErrorCode.ACTIVITY_GROUP_NOT_FOUND));
+             Group group = groupRepository.findById(groupId)
+                   .orElseThrow(() -> new ActivityDomainException(ActivityErrorCode.ACTIVITY_GROUP_NOT_FOUND));
 
             if (!activityQueryRepository.existsMemberInGroup(groupId, member.getId())) {
                 throw new ActivityDomainException(ActivityErrorCode.FORBIDDEN_ACTIVITY_ACCESS);
@@ -297,25 +295,25 @@ public class ActivityCommandService implements
         }
 
         Group createdGroup = groupRepository.save(Group.create(
-            PERSONAL_GROUP_NAME_PREFIX + member.getId(),
-            member.getName() + PERSONAL_GROUP_TITLE_SUFFIX,
-            PERSONAL_GROUP_CONTENT,
-            member,
-            null,
-            false,
-            1
+              PERSONAL_GROUP_NAME_PREFIX + member.getId(),
+              member.getName() + PERSONAL_GROUP_TITLE_SUFFIX,
+              PERSONAL_GROUP_CONTENT,
+              member,
+              null,
+              false,
+              1
         ));
         groupMemberRepository.save(GroupMember.create(member, createdGroup));
         return createdGroup;
     }
 
-    private void validateGroupJoinDuplication(Activity activity, Group group) {
+    private void validateGroupJoinDuplication (Activity activity, Group group){
         if (activityGroupRepository.existsByActivityAndGroupAndStatusIn(activity, group, ACTIVE_JOIN_STATUSES)) {
             throw new ActivityDomainException(ActivityErrorCode.DUPLICATE_ACTIVITY_GROUP_JOIN);
         }
     }
 
-    private void validateMemberJoinDuplication(Long activityId, Long memberId, Long groupId) {
+    private void validateMemberJoinDuplication (Long activityId, Long memberId, Long groupId){
         if (activityQueryRepository.existsMemberInActivityByStatuses(activityId, memberId, ACTIVE_JOIN_STATUSES)) {
             throw new ActivityDomainException(ActivityErrorCode.DUPLICATE_ACTIVITY_MEMBER_JOIN);
         }
@@ -326,21 +324,22 @@ public class ActivityCommandService implements
         }
     }
 
-    private void validateHostCanLeave(Activity activity, Long memberId) {
+    private void validateHostCanLeave (Activity activity, Long memberId){
         if (activity.getCreator() != null && activity.getCreator().getId().equals(memberId)) {
             throw new ActivityDomainException(ActivityErrorCode.HOST_CANNOT_LEAVE_ACTIVITY);
         }
     }
-    private void validateImageFile(MultipartFile file) {
+
+    private void validateImageFile (MultipartFile file){
         if (file == null || file.isEmpty()) {
             throw new ActivityDomainException(ActivityErrorCode.INVALID_ACTIVITY_THUMBNAIL_URL);
         }
     }
 
-    private String buildPublicUrl(String imagePath) {
+    private String buildPublicUrl (String imagePath){
         String normalizedBase = uploadPublicBaseUrl.endsWith("/")
-            ? uploadPublicBaseUrl.substring(0, uploadPublicBaseUrl.length() - 1)
-            : uploadPublicBaseUrl;
+              ? uploadPublicBaseUrl.substring(0, uploadPublicBaseUrl.length() - 1)
+              : uploadPublicBaseUrl;
         return normalizedBase + "/" + imagePath;
     }
 }
