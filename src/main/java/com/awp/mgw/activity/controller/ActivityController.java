@@ -22,6 +22,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -54,7 +55,7 @@ public class ActivityController {
     @PostMapping
     @Operation(summary = "활동 생성", description = "신규 활동을 생성합니다.")
     public ActivityIdResponse createActivity(
-        @RequestParam Long memberId,
+        @AuthenticationPrincipal Long memberId,
         @Valid @RequestBody CreateActivityRequest request
     ) {
         return createActivityUseCase.createActivity(memberId, request);
@@ -63,7 +64,7 @@ public class ActivityController {
     @PutMapping("/{activityId}")
     @Operation(summary = "활동 수정", description = "기존 활동을 수정합니다.")
     public ActivityIdResponse updateActivity(
-        @RequestParam Long memberId,
+        @AuthenticationPrincipal Long memberId,
         @PathVariable Long activityId,
         @Valid @RequestBody UpdateActivityRequest request
     ) {
@@ -73,7 +74,7 @@ public class ActivityController {
     @DeleteMapping("/{activityId}")
     @Operation(summary = "활동 삭제", description = "기존 활동을 삭제합니다.")
     public ActivityIdResponse deleteActivity(
-        @RequestParam Long memberId,
+        @AuthenticationPrincipal Long memberId,
         @PathVariable Long activityId
     ) {
         return deleteActivityUseCase.deleteActivity(memberId, activityId);
@@ -82,7 +83,7 @@ public class ActivityController {
     @GetMapping
     @Operation(summary = "활동 통합 조회", description = "scope, category, cursor 조건으로 활동 목록을 조회합니다.")
     public ActivityListResponse getActivities(
-            @RequestParam(required = false) Long memberId,
+            @AuthenticationPrincipal Long memberId,
             @RequestParam(required = false) String category,
             @RequestParam(required = false) String scope,
             @RequestParam(required = false) Long cursor
@@ -93,7 +94,7 @@ public class ActivityController {
     @GetMapping("/{activityId}/details")
     @Operation(summary = "활동 상세 조회", description = "활동 상세 정보를 조회합니다.")
     public ActivityDetailResponse getActivityDetail(
-        @RequestParam Long memberId,
+        @AuthenticationPrincipal Long memberId,
         @PathVariable Long activityId
     ) {
         return getActivityDetailUseCase.getActivityDetail(memberId, activityId);
@@ -102,7 +103,7 @@ public class ActivityController {
     @PostMapping("/{activityId}/members")
     @Operation(summary = "활동 참여", description = "개인 또는 그룹으로 활동에 참여합니다.")
     public ActivityIdResponse joinActivity(
-        @RequestParam Long memberId,
+        @AuthenticationPrincipal Long memberId,
         @PathVariable Long activityId,
         @Valid @RequestBody JoinActivityRequest request
     ) {
@@ -112,7 +113,7 @@ public class ActivityController {
     @DeleteMapping("/{activityId}/members")
     @Operation(summary = "활동 탈퇴", description = "참여 중인 활동에서 탈퇴합니다.")
     public ActivityIdResponse leaveActivity(
-        @RequestParam Long memberId,
+        @AuthenticationPrincipal Long memberId,
         @PathVariable Long activityId
     ) {
         return leaveActivityUseCase.leaveActivity(memberId, activityId);
@@ -121,7 +122,7 @@ public class ActivityController {
     @PostMapping("/{activityId}/likes")
     @Operation(summary = "활동 좋아요", description = "활동 좋아요를 추가합니다.")
     public ActivityIdResponse likeActivity(
-        @RequestParam Long memberId,
+        @AuthenticationPrincipal Long memberId,
         @PathVariable Long activityId
     ) {
         return likeActivityUseCase.likeActivity(memberId, activityId);
@@ -130,7 +131,7 @@ public class ActivityController {
     @DeleteMapping("/{activityId}/likes")
     @Operation(summary = "활동 좋아요 취소", description = "활동 좋아요를 취소합니다.")
     public ActivityIdResponse unlikeActivity(
-        @RequestParam Long memberId,
+        @AuthenticationPrincipal Long memberId,
         @PathVariable Long activityId
     ) {
         return unlikeActivityUseCase.unlikeActivity(memberId, activityId);
@@ -139,7 +140,7 @@ public class ActivityController {
     @PostMapping(value = "/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "활동 이미지 업로드", description = "활동 이미지를 업로드하고 저장 경로를 반환합니다.")
     public ActivityImageUploadResponse uploadActivityImage(
-        @RequestParam Long memberId,
+        @AuthenticationPrincipal Long memberId,
         @RequestPart("file") MultipartFile file
     ) {
         return uploadActivityImageUseCase.uploadActivityImage(memberId, file);
