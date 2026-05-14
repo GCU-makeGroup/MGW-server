@@ -14,6 +14,7 @@ import com.awp.mgw.activity.usecase.GetActivityListUseCase;
 import com.awp.mgw.activity.usecase.JoinActivityUseCase;
 import com.awp.mgw.activity.usecase.LeaveActivityUseCase;
 import com.awp.mgw.activity.usecase.LikeActivityUseCase;
+import com.awp.mgw.activity.usecase.SearchActivityUseCase;
 import com.awp.mgw.activity.usecase.UnlikeActivityUseCase;
 import com.awp.mgw.activity.usecase.UploadActivityImageUseCase;
 import com.awp.mgw.activity.usecase.UpdateActivityUseCase;
@@ -50,6 +51,7 @@ public class ActivityController {
     private final LeaveActivityUseCase leaveActivityUseCase;
     private final LikeActivityUseCase likeActivityUseCase;
     private final UnlikeActivityUseCase unlikeActivityUseCase;
+    private final SearchActivityUseCase searchActivityUseCase;
     private final UploadActivityImageUseCase uploadActivityImageUseCase;
 
     @PostMapping
@@ -86,9 +88,21 @@ public class ActivityController {
             @AuthenticationPrincipal Long memberId,
             @RequestParam(required = false) String category,
             @RequestParam(required = false) String scope,
+            @RequestParam(required = false, defaultValue = "20") Integer limit,
             @RequestParam(required = false) Long cursor
     ) {
-        return getActivityListUseCase.getActivityList(memberId, category, scope, cursor);
+        return getActivityListUseCase.getActivityList(memberId, category, scope, limit, cursor);
+    }
+
+    @GetMapping("/search")
+    @Operation(summary = "활동 검색", description = "활동 제목을 기준으로 검색합니다. (부분 일치)")
+    public ActivityListResponse searchActivities(
+        @AuthenticationPrincipal Long memberId,
+        @RequestParam String keyword,
+        @RequestParam(required = false, defaultValue = "20") Integer limit,
+        @RequestParam(required = false) Long cursor
+    ) {
+        return searchActivityUseCase.searchActivities(memberId, keyword, limit, cursor);
     }
 
     @GetMapping("/{activityId}/details")
