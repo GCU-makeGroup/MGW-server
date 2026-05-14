@@ -7,6 +7,7 @@ import com.awp.mgw.member.controller.dto.response.SignupResponse;
 import com.awp.mgw.member.domain.Member;
 import com.awp.mgw.member.port.MemberRepository;
 import com.awp.mgw.member.usecase.LoginUseCase;
+import com.awp.mgw.member.usecase.LogoutUseCase;
 import com.awp.mgw.member.usecase.SignupUseCase;
 import com.awp.mgw.member.domain.exception.MemberDomainException;
 import com.awp.mgw.member.domain.exception.MemberErrorCode;
@@ -30,7 +31,8 @@ import com.awp.mgw.member.domain.RefreshToken;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class AuthCommandService implements SignupUseCase, LoginUseCase, SendEmailVerificationUseCase,
+public class AuthCommandService implements SignupUseCase, LoginUseCase, LogoutUseCase,
+      SendEmailVerificationUseCase,
       VerifyEmailVerificationUseCase,
       ReissueTokenUseCase {
 
@@ -108,6 +110,12 @@ public class AuthCommandService implements SignupUseCase, LoginUseCase, SendEmai
           member.getEmail(),
           member.getName()
     );
+  }
+
+  @Override
+  @Transactional
+  public void logout(Long memberId) {
+    refreshTokenRepository.deleteByMemberId(memberId);
   }
 
   @Override
