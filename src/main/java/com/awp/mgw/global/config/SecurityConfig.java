@@ -46,7 +46,10 @@ public class SecurityConfig {
                       "/api/v1/auth/token/reissue",
                       "/api/v1/auth/email-verification/send",
                       "/api/v1/auth/email-verification/resend",
-                      "/api/v1/auth/email-verification/verify"
+                      "/api/v1/auth/email-verification/verify",
+                      "/swagger-ui.html",
+                      "/swagger-ui/**",
+                      "/v3/api-docs/**"
                 ).permitAll()
                 .anyRequest().authenticated()
           )
