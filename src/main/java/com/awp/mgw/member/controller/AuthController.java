@@ -16,6 +16,8 @@ import com.awp.mgw.member.controller.dto.response.TokenReissueResponse;
 import com.awp.mgw.member.usecase.ReissueTokenUseCase;
 import com.awp.mgw.member.usecase.SendEmailVerificationUseCase;
 import com.awp.mgw.member.usecase.VerifyEmailVerificationUseCase;
+import com.awp.mgw.member.usecase.LogoutUseCase;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -27,6 +29,7 @@ public class AuthController {
   private final SendEmailVerificationUseCase sendEmailVerificationUseCase;
   private final VerifyEmailVerificationUseCase verifyEmailVerificationUseCase;
   private final ReissueTokenUseCase reissueTokenUseCase;
+  private final LogoutUseCase logoutUseCase;
 
   @PostMapping("/signup")
   public SignupResponse signup(@Valid @RequestBody SignupRequest request) {
@@ -36,6 +39,11 @@ public class AuthController {
   @PostMapping("/login")
   public LoginResponse login(@Valid @RequestBody LoginRequest request) {
     return loginUseCase.login(request);
+  }
+
+  @PostMapping("/logout")
+  public void logout(@AuthenticationPrincipal Long memberId) {
+    logoutUseCase.logout(memberId);
   }
 
   @PostMapping("/email-verification/send")
