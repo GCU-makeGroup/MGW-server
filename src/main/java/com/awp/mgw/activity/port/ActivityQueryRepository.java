@@ -66,6 +66,31 @@ public class ActivityQueryRepository {
             .fetch();
     }
 
+    public List<ActivitySummaryRow> searchActivitySummaries(Long memberId, String keyword, Long cursor, int size) {
+        return queryFactory
+            .select(Projections.constructor(
+                ActivitySummaryRow.class,
+                activity.id,
+                activity.title,
+                categoryNameExpression(),
+                activity.maxMember,
+                currentParticipantCountExpression(activity.id),
+                isLikedExpression(memberId, activity.id),
+                likeCountExpression(activity.id),
+                activity.schedule,
+                activity.thumbnailUrl,
+                scoreExpression(activity.id)
+            ))
+            .from(activity)
+            .where(
+                cursorLt(cursor),
+                titleContains(keyword)
+            )
+            .orderBy(activity.id.desc())
+            .limit(size)
+            .fetch();
+    }
+
     public ActivitySummaryRow findTopHotpick(Long memberId, String categoryName) {
         return queryFactory
             .select(Projections.constructor(
@@ -306,6 +331,13 @@ public class ActivityQueryRepository {
         }
 
         return null;
+    }
+
+    private BooleanExpression titleContains(String keyword) {
+        if (keyword == null || keyword.isBlank()) {
+            return null;
+        }
+        return activity.title.containsIgnoreCase(keyword);
     }
 
     private Expression<String> categoryNameExpression() {
