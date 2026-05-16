@@ -29,7 +29,8 @@ public enum MemberErrorCode implements BaseCode {
     EMAIL_ALREADY_VERIFIED(HttpStatus.BAD_REQUEST, "MEMBER-014", "이미 인증된 이메일입니다."),
 
     INVALID_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "MEMBER-015", "Refresh Token이 유효하지 않습니다."),
-    EXPIRED_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "MEMBER-016", "Refresh Token이 만료되었습니다.");
+    EXPIRED_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "MEMBER-016", "Refresh Token이 만료되었습니다."),
+    EMAIL_NOT_VERIFIED(HttpStatus.BAD_REQUEST, "MEMBER-017", "이메일 인증이 완료되지 않았습니다.");
 
     private final HttpStatus httpStatus;
     private final String code;

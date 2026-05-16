@@ -12,7 +12,7 @@ import java.util.UUID;
 @Component
 public class FileUtil {
 
-    private static final String UPLOAD_ROOT = "C:/mgw/uploads";
+    private static final String UPLOAD_ROOT = System.getProperty("user.home") + "/mgw/uploads";
 
     /**
      * 파일을 지정된 하위 디렉토리에 저장합니다.

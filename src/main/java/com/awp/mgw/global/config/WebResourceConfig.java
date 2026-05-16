@@ -8,7 +8,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class WebResourceConfig implements WebMvcConfigurer {
 
     private static final String UPLOAD_RESOURCE_PATTERN = "/mgw/uploads/**";
-    private static final String UPLOAD_RESOURCE_LOCATION = "file:///C:/mgw/uploads/";
+    private static final String UPLOAD_RESOURCE_LOCATION = "file://" + System.getProperty("user.home") + "/mgw/uploads/";
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {

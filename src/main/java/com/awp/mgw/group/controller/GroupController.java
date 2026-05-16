@@ -111,8 +111,7 @@ public class GroupController {
             description = "그룹명 기준으로 검색합니다. 검색어와 그룹명의 공백을 제거한 뒤 비교하므로 띄어쓰기가 달라도 검색됩니다."
     )
     public GetGroupListResponse searchGroupList(
-            @Parameter(description = "검색 요청 회원 ID", example = "1")
-            @RequestParam Long memberId,
+            @AuthenticationPrincipal Long memberId,
             @Parameter(description = "검색할 그룹명 키워드", example = "모 각 코")
             @RequestParam
             @NotBlank(message = "검색어는 필수입니다.")
