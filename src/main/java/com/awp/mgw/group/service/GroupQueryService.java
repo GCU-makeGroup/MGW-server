@@ -81,7 +81,7 @@ public class GroupQueryService implements GetGroupListUseCase, GetMyGroupListUse
         List<Comment> comments = groupQueryRepository.findCommentsByGroupId(groupId);
         Set<Long> groupMemberIds = groupQueryRepository.findGroupMemberIdsByGroupId(groupId);
 
-        return GetGroupDetailResponse.from(group, categories, currentMemberCount, commentCount, comments, groupMemberIds);
+        return GetGroupDetailResponse.from(group, categories, currentMemberCount, commentCount, comments, groupMemberIds, memberId);
     }
 
     private Member getMemberOrThrow(Long memberId) {
