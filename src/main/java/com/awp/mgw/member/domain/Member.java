@@ -106,4 +106,21 @@ public class Member extends BaseEntity {
         groups.forEach(Group::detachMember);
         comments.forEach(Comment::detachMember);
     }
+
+    public void updatePassword(String encodedPassword) {
+        this.password = encodedPassword;
+    }
+
+    public void softDelete() {
+        this.deletedAt = Instant.now();
+    }
+
+    public void updateProfile(String name, String imageUrl) {
+        if (name != null && !name.isBlank()) {
+            this.name = name;
+        }
+        if (imageUrl != null) {
+            this.imageUrl = imageUrl;
+        }
+    }
 }

@@ -7,6 +7,7 @@ import com.awp.mgw.category.domain.exception.CategoryErrorCode;
 import com.awp.mgw.category.port.CategoryRepository;
 import com.awp.mgw.group.controller.dto.request.CreateCommentRequest;
 import com.awp.mgw.group.controller.dto.request.CreateGroupRequest;
+import com.awp.mgw.group.controller.dto.request.UpdateCommentRequest;
 import com.awp.mgw.group.controller.dto.response.CreateCommentResponse;
 import com.awp.mgw.group.controller.dto.response.CreateGroupResponse;
 import com.awp.mgw.group.domain.Comment;
@@ -21,9 +22,11 @@ import com.awp.mgw.group.port.GroupMemberRepository;
 import com.awp.mgw.group.port.GroupRepository;
 import com.awp.mgw.group.usecase.command.CreateCommentUseCase;
 import com.awp.mgw.group.usecase.command.CreateGroupUseCase;
+import com.awp.mgw.group.usecase.command.DeleteCommentUseCase;
 import com.awp.mgw.group.usecase.command.DeleteGroupUseCase;
 import com.awp.mgw.group.usecase.command.LeaveGroupUseCase;
 import com.awp.mgw.group.usecase.command.JoinGroupUseCase;
+import com.awp.mgw.group.usecase.command.UpdateCommentUseCase;
 import com.awp.mgw.group.usecase.command.UpdateGroupUseCase;
 import com.awp.mgw.member.domain.Member;
 import com.awp.mgw.member.domain.exception.MemberDomainException;
@@ -38,7 +41,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Transactional
-public class GroupCommandService implements CreateGroupUseCase, CreateCommentUseCase, UpdateGroupUseCase, JoinGroupUseCase, DeleteGroupUseCase, LeaveGroupUseCase {
+public class GroupCommandService implements CreateGroupUseCase, CreateCommentUseCase, UpdateGroupUseCase, JoinGroupUseCase, DeleteGroupUseCase, LeaveGroupUseCase, DeleteCommentUseCase, UpdateCommentUseCase {
 
     private final GroupRepository groupRepository;
     private final CommentRepository commentRepository;
@@ -161,6 +164,22 @@ public class GroupCommandService implements CreateGroupUseCase, CreateCommentUse
         return CreateCommentResponse.from(savedComment.getId(), authorGroupMember);
     }
 
+    @Override
+    public void deleteComment(Long memberId, Long groupId, Long commentId) {
+        getMemberOrThrow(memberId);
+        getGroupOrThrow(groupId);
+        Comment comment = getOwnedCommentOrThrow(commentId, memberId, groupId);
+        commentRepository.delete(comment);
+    }
+
+    @Override
+    public void updateComment(Long memberId, Long groupId, Long commentId, UpdateCommentRequest request) {
+        getMemberOrThrow(memberId);
+        getGroupOrThrow(groupId);
+        Comment comment = getOwnedCommentOrThrow(commentId, memberId, groupId);
+        comment.updateContent(request.content());
+    }
+
     /**
      * 그룹 정원 유효성 검증
      */
@@ -218,6 +237,21 @@ public class GroupCommandService implements CreateGroupUseCase, CreateCommentUse
         }
 
         return parent;
+    }
+
+    private Comment getOwnedCommentOrThrow(Long commentId, Long memberId, Long groupId) {
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new GroupDomainException(GroupErrorCode.COMMENT_NOT_FOUND));
+
+        if (!comment.getGroup().getId().equals(groupId)) {
+            throw new GroupDomainException(GroupErrorCode.INVALID_COMMENT_PARENT);
+        }
+
+        if (comment.getMember() == null || !comment.getMember().getId().equals(memberId)) {
+            throw new GroupDomainException(GroupErrorCode.COMMENT_NOT_OWNED);
+        }
+
+        return comment;
     }
 
     private List<Category> getCategoriesOrThrow(List<Long> categoryIds) {

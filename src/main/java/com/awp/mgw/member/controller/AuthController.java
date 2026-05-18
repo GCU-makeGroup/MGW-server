@@ -1,11 +1,14 @@
 package com.awp.mgw.member.controller;
 
+import com.awp.mgw.member.controller.dto.request.ChangePasswordRequest;
 import com.awp.mgw.member.controller.dto.request.LoginRequest;
 import com.awp.mgw.member.controller.dto.request.SignupRequest;
 import com.awp.mgw.member.controller.dto.response.LoginResponse;
 import com.awp.mgw.member.controller.dto.response.SignupResponse;
+import com.awp.mgw.member.usecase.ChangePasswordUseCase;
 import com.awp.mgw.member.usecase.LoginUseCase;
 import com.awp.mgw.member.usecase.SignupUseCase;
+import com.awp.mgw.member.usecase.WithdrawMemberUseCase;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -30,6 +33,8 @@ public class AuthController {
   private final VerifyEmailVerificationUseCase verifyEmailVerificationUseCase;
   private final ReissueTokenUseCase reissueTokenUseCase;
   private final LogoutUseCase logoutUseCase;
+  private final ChangePasswordUseCase changePasswordUseCase;
+  private final WithdrawMemberUseCase withdrawMemberUseCase;
 
   @PostMapping("/signup")
   public SignupResponse signup(@Valid @RequestBody SignupRequest request) {
@@ -72,5 +77,18 @@ public class AuthController {
         @Valid @RequestBody TokenReissueRequest request
   ) {
     return reissueTokenUseCase.reissue(request.refreshToken());
+  }
+
+  @PatchMapping("/password")
+  public void changePassword(
+        @AuthenticationPrincipal Long memberId,
+        @Valid @RequestBody ChangePasswordRequest request
+  ) {
+    changePasswordUseCase.changePassword(memberId, request);
+  }
+
+  @DeleteMapping("/withdraw")
+  public void withdraw(@AuthenticationPrincipal Long memberId) {
+    withdrawMemberUseCase.withdraw(memberId);
   }
 }

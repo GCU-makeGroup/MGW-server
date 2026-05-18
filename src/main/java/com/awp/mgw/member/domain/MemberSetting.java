@@ -66,4 +66,18 @@ public class MemberSetting extends BaseEntity {
             .postCommentNotification(true)
             .build();
     }
+
+    public void updateLanguage(Language language) {
+        this.language = language;
+    }
+
+    public void updateDarkMode(Boolean darkMode) {
+        this.darkMode = darkMode;
+    }
+
+    public void updateNotifications(Boolean messageNotification, Boolean groupInviteNotification, Boolean postCommentNotification) {
+        if (messageNotification != null) this.messageNotification = messageNotification;
+        if (groupInviteNotification != null) this.groupInviteNotification = groupInviteNotification;
+        if (postCommentNotification != null) this.postCommentNotification = postCommentNotification;
+    }
 }

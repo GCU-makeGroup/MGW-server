@@ -89,6 +89,10 @@ public class AuthCommandService implements SignupUseCase, LoginUseCase, LogoutUs
       throw new MemberDomainException(MemberErrorCode.INVALID_LOGIN_INFO);
     }
 
+    if (member.getDeletedAt() != null) {
+      throw new MemberDomainException(MemberErrorCode.MEMBER_WITHDRAWN);
+    }
+
     String accessToken = jwtTokenProvider.createAccessToken(
           member.getId(),
           member.getEmail()
@@ -173,6 +177,13 @@ public class AuthCommandService implements SignupUseCase, LoginUseCase, LogoutUs
     }
 
     Long memberId = jwtTokenProvider.getMemberId(refreshToken);
+
+    Member member = memberRepository.findById(memberId)
+          .orElseThrow(() -> new MemberDomainException(MemberErrorCode.INVALID_REFRESH_TOKEN));
+
+    if (member.getDeletedAt() != null) {
+      throw new MemberDomainException(MemberErrorCode.MEMBER_WITHDRAWN);
+    }
 
     RefreshToken savedToken = refreshTokenRepository.findByMemberId(memberId)
           .orElseThrow(() -> new MemberDomainException(MemberErrorCode.INVALID_REFRESH_TOKEN));
