@@ -1,6 +1,7 @@
 package com.awp.mgw.member.controller.dto.response;
 
 public record TokenReissueResponse(
-      String accessToken
+      String accessToken,
+      String refreshToken
 ) {
 }

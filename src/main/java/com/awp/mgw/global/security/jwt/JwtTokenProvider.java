@@ -59,6 +59,15 @@ public class JwtTokenProvider {
     }
   }
 
+  public boolean isAccessToken(String token) {
+    try {
+      Claims claims = parseClaims(token);
+      return ACCESS_TOKEN_TYPE.equals(claims.get(TOKEN_TYPE_CLAIM, String.class));
+    } catch (JwtException | IllegalArgumentException e) {
+      return false;
+    }
+  }
+
   public Long getMemberId(String token) {
     return Long.valueOf(parseClaims(token).getSubject());
   }

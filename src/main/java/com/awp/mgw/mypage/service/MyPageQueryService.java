@@ -26,8 +26,6 @@ import java.util.List;
 @Transactional(readOnly = true)
 public class MyPageQueryService implements GetMyPageMainUseCase {
 
-  private static final int TEMP_POINT = 1250;
-
   private final MemberRepository memberRepository;
   private final ActivityQueryRepository activityQueryRepository;
   private final GroupMemberRepository groupMemberRepository;
@@ -72,7 +70,7 @@ public class MyPageQueryService implements GetMyPageMainUseCase {
     MyPageSummaryResponse summary = new MyPageSummaryResponse(
           activityCount,
           groupCount,
-          TEMP_POINT
+          member.getPoint()
     );
 
     List<ScheduleDateResponse> schedules =

@@ -23,7 +23,8 @@ public record GetGroupDetailResponse(
         Integer capacity,
         Integer currentMemberCount,
         Integer commentCount,
-        List<CommentInfo> comments
+        List<CommentInfo> comments,
+        Boolean isMember
 ) {
     public static GetGroupDetailResponse from(
             Group group,
@@ -31,7 +32,8 @@ public record GetGroupDetailResponse(
             Integer currentMemberCount,
             Integer commentCount,
             List<Comment> comments,
-            Set<Long> groupMemberIds
+            Set<Long> groupMemberIds,
+            Long currentMemberId
     ) {
         return new GetGroupDetailResponse(
                 group.getId(),
@@ -51,7 +53,8 @@ public record GetGroupDetailResponse(
                 commentCount,
                 comments.stream()
                         .map(comment -> CommentInfo.from(comment, groupMemberIds))
-                        .toList()
+                        .toList(),
+                groupMemberIds.contains(currentMemberId)
         );
     }
 

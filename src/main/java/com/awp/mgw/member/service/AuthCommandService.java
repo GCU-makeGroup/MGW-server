@@ -47,6 +47,10 @@ public class AuthCommandService implements SignupUseCase, LoginUseCase, LogoutUs
   @Override
   @Transactional
   public SignupResponse signup(SignupRequest request) {
+    if (!emailVerificationRepository.existsByEmailAndVerifiedTrue(request.email())) {
+      throw new MemberDomainException(MemberErrorCode.EMAIL_NOT_VERIFIED);
+    }
+
     if (memberRepository.existsByEmail(request.email())) {
       throw new MemberDomainException(MemberErrorCode.DUPLICATE_MEMBER_EMAIL);
     }
@@ -194,7 +198,7 @@ public class AuthCommandService implements SignupUseCase, LoginUseCase, LogoutUs
                 )
           );
 
-    return new TokenReissueResponse(accessToken);
+    return new TokenReissueResponse(accessToken, refreshToken);
   }
 
   private void validateNotRegisteredEmail(String email) {

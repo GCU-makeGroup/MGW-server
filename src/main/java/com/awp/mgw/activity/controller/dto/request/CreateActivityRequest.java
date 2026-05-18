@@ -27,7 +27,6 @@ public record CreateActivityRequest(
     @NotBlank(message = "오픈채팅 URL은 필수입니다.")
     String openchatUrl,
 
-    @NotBlank(message = "썸네일 URL은 필수입니다.")
     String thumbnailUrl,
 
     @NotBlank(message = "활동 위치는 필수입니다.")
