@@ -2,11 +2,13 @@ package com.awp.mgw.member.controller;
 
 import com.awp.mgw.member.controller.dto.request.ChangePasswordRequest;
 import com.awp.mgw.member.controller.dto.request.LoginRequest;
+import com.awp.mgw.member.controller.dto.request.SavePreferencesRequest;
 import com.awp.mgw.member.controller.dto.request.SignupRequest;
 import com.awp.mgw.member.controller.dto.response.LoginResponse;
 import com.awp.mgw.member.controller.dto.response.SignupResponse;
 import com.awp.mgw.member.usecase.ChangePasswordUseCase;
 import com.awp.mgw.member.usecase.LoginUseCase;
+import com.awp.mgw.member.usecase.SavePreferencesUseCase;
 import com.awp.mgw.member.usecase.SignupUseCase;
 import com.awp.mgw.member.usecase.WithdrawMemberUseCase;
 import jakarta.validation.Valid;
@@ -35,6 +37,7 @@ public class AuthController {
   private final LogoutUseCase logoutUseCase;
   private final ChangePasswordUseCase changePasswordUseCase;
   private final WithdrawMemberUseCase withdrawMemberUseCase;
+  private final SavePreferencesUseCase savePreferencesUseCase;
 
   @PostMapping("/signup")
   public SignupResponse signup(@Valid @RequestBody SignupRequest request) {
@@ -90,5 +93,13 @@ public class AuthController {
   @DeleteMapping("/withdraw")
   public void withdraw(@AuthenticationPrincipal Long memberId) {
     withdrawMemberUseCase.withdraw(memberId);
+  }
+
+  @PostMapping("/preferences")
+  public void savePreferences(
+        @AuthenticationPrincipal Long memberId,
+        @RequestBody SavePreferencesRequest request
+  ) {
+    savePreferencesUseCase.savePreferences(memberId, request);
   }
 }

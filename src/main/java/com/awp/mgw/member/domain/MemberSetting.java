@@ -3,6 +3,7 @@ package com.awp.mgw.member.domain;
 import com.awp.mgw.common.BaseEntity;
 import com.awp.mgw.member.domain.enums.Language;
 import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -13,6 +14,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.*;
 
 @Entity
@@ -45,15 +48,25 @@ public class MemberSetting extends BaseEntity {
     @Column(name = "post_comment_notification", nullable = false)
     private Boolean postCommentNotification = true;
 
+    @ElementCollection(fetch = FetchType.EAGER)
+    @Column(name = "interest_keyword")
+    private List<String> interestKeywords = new ArrayList<>();
+
+    @Column(name = "purpose", columnDefinition = "TEXT")
+    private String purpose;
+
     @Builder(access = AccessLevel.PRIVATE)
     private MemberSetting(Member member, Language language, Boolean darkMode, Boolean messageNotification,
-                          Boolean groupInviteNotification, Boolean postCommentNotification) {
+                          Boolean groupInviteNotification, Boolean postCommentNotification,
+                          List<String> interestKeywords, String purpose) {
         this.member = member;
         this.language = language;
         this.darkMode = darkMode;
         this.messageNotification = messageNotification;
         this.groupInviteNotification = groupInviteNotification;
         this.postCommentNotification = postCommentNotification;
+        this.interestKeywords = interestKeywords != null ? interestKeywords : new ArrayList<>();
+        this.purpose = purpose;
     }
 
     public static MemberSetting create(Member member, Language language) {
@@ -79,5 +92,13 @@ public class MemberSetting extends BaseEntity {
         if (messageNotification != null) this.messageNotification = messageNotification;
         if (groupInviteNotification != null) this.groupInviteNotification = groupInviteNotification;
         if (postCommentNotification != null) this.postCommentNotification = postCommentNotification;
+    }
+
+    public void updateInterestKeywords(List<String> keywords) {
+        this.interestKeywords = keywords != null ? keywords : new ArrayList<>();
+    }
+
+    public void updatePurpose(String purpose) {
+        this.purpose = purpose;
     }
 }

@@ -337,7 +337,8 @@ public class ActivityQueryRepository {
         if (keyword == null || keyword.isBlank()) {
             return null;
         }
-        return activity.title.containsIgnoreCase(keyword);
+        return activity.title.containsIgnoreCase(keyword)
+                .or(activity.description.containsIgnoreCase(keyword));
     }
 
     private Expression<String> categoryNameExpression() {
