@@ -3,11 +3,14 @@ package com.awp.mgw.mypage.controller;
 import com.awp.mgw.mypage.controller.dto.request.*;
 import com.awp.mgw.mypage.controller.dto.response.MyPageMainResponse;
 import com.awp.mgw.mypage.controller.dto.response.MyPageSettingsResponse;
+import com.awp.mgw.mypage.controller.dto.response.ProfileImageUploadResponse;
 import com.awp.mgw.mypage.usecase.command.*;
 import com.awp.mgw.mypage.usecase.query.GetMyPageMainUseCase;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -23,6 +26,7 @@ public class MyPageController {
 
   private final GetMyPageMainUseCase getMyPageMainUseCase;
   private final UpdateMyPageProfileUseCase updateMyPageProfileUseCase;
+  private final UploadProfileImageUseCase uploadProfileImageUseCase;
   private final GetMyPageSettingsUseCase getMyPageSettingsUseCase;
   private final UpdateMatchingCommunicationUseCase updateMatchingCommunicationUseCase;
   private final UpdateNotificationSettingsUseCase updateNotificationSettingsUseCase;
@@ -48,6 +52,14 @@ public class MyPageController {
         @Valid @RequestBody UpdateProfileRequest request
   ) {
     updateMyPageProfileUseCase.updateProfile(memberId, request);
+  }
+
+  @PostMapping(value = "/api/v1/mypage/profile/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  public ProfileImageUploadResponse uploadProfileImage(
+        @AuthenticationPrincipal Long memberId,
+        @RequestPart("file") MultipartFile file
+  ) {
+    return uploadProfileImageUseCase.uploadProfileImage(memberId, file);
   }
 
   @GetMapping("/api/v1/mypage/settings")

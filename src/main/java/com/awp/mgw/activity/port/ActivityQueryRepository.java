@@ -22,6 +22,7 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDate;
 
 import java.time.Instant;
+import java.time.ZoneId;
 import java.util.Collection;
 import java.util.List;
 
@@ -53,7 +54,9 @@ public class ActivityQueryRepository {
                 likeCountExpression(activity.id),
                 activity.schedule,
                 activity.thumbnailUrl,
-                scoreExpression(activity.id)
+                scoreExpression(activity.id),
+                isCreatorExpression(memberId),
+                isJoinedExpression(activity.id, memberId)
             ))
             .from(activity)
             .where(
@@ -79,7 +82,9 @@ public class ActivityQueryRepository {
                 likeCountExpression(activity.id),
                 activity.schedule,
                 activity.thumbnailUrl,
-                scoreExpression(activity.id)
+                scoreExpression(activity.id),
+                isCreatorExpression(memberId),
+                isJoinedExpression(activity.id, memberId)
             ))
             .from(activity)
             .where(
@@ -104,7 +109,9 @@ public class ActivityQueryRepository {
                 likeCountExpression(activity.id),
                 activity.schedule,
                 activity.thumbnailUrl,
-                scoreExpression(activity.id)
+                scoreExpression(activity.id),
+                isCreatorExpression(memberId),
+                isJoinedExpression(activity.id, memberId)
             ))
             .from(activity)
             .where(categoryFilter(categoryName))
@@ -126,7 +133,9 @@ public class ActivityQueryRepository {
                 likeCountExpression(activity.id),
                 activity.schedule,
                 activity.thumbnailUrl,
-                scoreExpression(activity.id)
+                scoreExpression(activity.id),
+                isCreatorExpression(memberId),
+                isJoinedExpression(activity.id, memberId)
             ))
             .from(activity)
             .where(activity.id.eq(activityId))
@@ -397,6 +406,29 @@ public class ActivityQueryRepository {
             .exists();
     }
 
+    private Expression<Boolean> isCreatorExpression(Long memberId) {
+        if (memberId == null) {
+            return Expressions.asBoolean(false);
+        }
+        return activity.creator.id.eq(memberId);
+    }
+
+    private Expression<Boolean> isJoinedExpression(Expression<Long> activityIdExpression, Long memberId) {
+        if (memberId == null) {
+            return Expressions.asBoolean(false);
+        }
+        return JPAExpressions.selectOne()
+            .from(activityGroup)
+            .join(activityGroup.group, group)
+            .join(group.groupMembers, groupMember)
+            .where(
+                activityGroup.activity.id.eq(activityIdExpression),
+                activityGroup.status.eq(ActivityGroupStatus.JOIN),
+                groupMember.member.id.eq(memberId)
+            )
+            .exists();
+    }
+
     private NumberExpression<Long> scoreExpression(Expression<Long> activityIdExpression) {
         return Expressions.numberTemplate(
             Long.class,
@@ -416,7 +448,9 @@ public class ActivityQueryRepository {
         Long likeCount,
         Instant schedule,
         String thumbnail,
-        Long score
+        Long score,
+        boolean isCreator,
+        boolean isJoined
     ) {
     }
 
@@ -425,6 +459,45 @@ public class ActivityQueryRepository {
         String name,
         String profileImg
     ) {
+    }
+
+    public record ScheduleDetailRow(
+        Long activityId,
+        String title,
+        String category,
+        String location,
+        Instant schedule,
+        Integer capacity,
+        Long currentParticipants
+    ) {}
+
+    public List<ScheduleDetailRow> findActivitiesByDate(Long memberId, LocalDate date) {
+        Instant startOfDay = date.atStartOfDay(ZoneId.systemDefault()).toInstant();
+        Instant startOfNextDay = date.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant();
+
+        return queryFactory
+            .select(Projections.constructor(
+                ScheduleDetailRow.class,
+                activity.id,
+                activity.title,
+                categoryNameExpression(),
+                activity.location,
+                activity.schedule,
+                activity.maxMember,
+                currentParticipantCountExpression(activity.id)
+            ))
+            .from(activityGroup)
+            .join(activityGroup.activity, activity)
+            .join(activityGroup.group, group)
+            .join(group.groupMembers, groupMember)
+            .where(
+                activityGroup.status.eq(ActivityGroupStatus.JOIN),
+                groupMember.member.id.eq(memberId),
+                activity.schedule.goe(startOfDay),
+                activity.schedule.lt(startOfNextDay)
+            )
+            .distinct()
+            .fetch();
     }
 
     // schedule에 사용될 activity 일정

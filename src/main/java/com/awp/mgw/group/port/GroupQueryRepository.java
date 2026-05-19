@@ -48,7 +48,7 @@ public class GroupQueryRepository {
                 .select(group.id)
                 .from(group)
                 .leftJoin(group.groupCategories, groupCategory)
-                .where(accessibleGroup(memberId), categoryIdIn(categoryIds))
+                .where(accessibleGroup(), categoryIdIn(categoryIds))
                 .groupBy(group.id)
                 .orderBy(orderSpecifiers)
                 .offset(pageable.getOffset())
@@ -60,7 +60,7 @@ public class GroupQueryRepository {
                 .select(group.id.countDistinct())
                 .from(group)
                 .leftJoin(group.groupCategories, groupCategory)
-                .where(accessibleGroup(memberId), categoryIdIn(categoryIds))
+                .where(accessibleGroup(), categoryIdIn(categoryIds))
                 .fetchOne();
 
         if (groupIds.isEmpty()) {
@@ -71,7 +71,7 @@ public class GroupQueryRepository {
         List<Group> groups = queryFactory
                 .selectFrom(group)
                 .distinct()
-                .where(group.id.in(groupIds), accessibleGroup(memberId))
+                .where(group.id.in(groupIds), accessibleGroup())
                 .orderBy(orderSpecifiers)
                 .fetch();
 
@@ -117,7 +117,7 @@ public class GroupQueryRepository {
         List<Long> groupIds = queryFactory
                 .select(group.id)
                 .from(group)
-                .where(accessibleGroup(memberId), nameCondition)
+                .where(accessibleGroup(), nameCondition)
                 .orderBy(orderSpecifiers)
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
@@ -126,7 +126,7 @@ public class GroupQueryRepository {
         Long total = queryFactory
                 .select(group.id.count())
                 .from(group)
-                .where(accessibleGroup(memberId), nameCondition)
+                .where(accessibleGroup(), nameCondition)
                 .fetchOne();
 
         if (groupIds.isEmpty()) {
@@ -135,7 +135,7 @@ public class GroupQueryRepository {
 
         List<Group> groups = queryFactory
                 .selectFrom(group)
-                .where(group.id.in(groupIds), accessibleGroup(memberId))
+                .where(group.id.in(groupIds), accessibleGroup())
                 .orderBy(orderSpecifiers)
                 .fetch();
 
@@ -146,7 +146,7 @@ public class GroupQueryRepository {
         Group foundGroup = queryFactory
                 .selectFrom(group)
                 .leftJoin(group.member, member).fetchJoin()
-                .where(group.id.eq(groupId), accessibleGroup(memberId))
+                .where(group.id.eq(groupId), accessibleGroup())
                 .fetchOne();
 
         return Optional.ofNullable(foundGroup);
@@ -246,9 +246,8 @@ public class GroupQueryRepository {
         return nameMatch.or(titleMatch);
     }
 
-    private BooleanExpression accessibleGroup(Long memberId) {
-        return group.isPublic.isTrue()
-                .or(group.member.id.eq(memberId));
+    private BooleanExpression accessibleGroup() {
+        return group.isPublic.isTrue();
     }
 
     private OrderSpecifier<?>[] toOrderSpecifiers(Sort sort) {

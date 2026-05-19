@@ -98,6 +98,10 @@ public class ActivityCommandService implements
         Activity savedActivity = activityRepository.save(activity);
         saveActivityCategories(savedActivity, request.categoryIds());
 
+        // Auto-join the creator
+        Group creatorGroup = resolveOrCreatePersonalGroup(member);
+        activityGroupRepository.save(ActivityGroup.create(savedActivity, creatorGroup, ActivityGroupStatus.JOIN));
+
         return ActivityIdResponse.from(savedActivity.getId());
     }
 
@@ -289,6 +293,10 @@ public class ActivityCommandService implements
             return group;
         }
 
+        return resolveOrCreatePersonalGroup(member);
+    }
+
+    private Group resolveOrCreatePersonalGroup(Member member) {
         Group singleMemberGroup = activityQueryRepository.findSingleMemberGroup(member.getId());
         if (singleMemberGroup != null) {
             return singleMemberGroup;

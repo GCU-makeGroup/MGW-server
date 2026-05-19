@@ -114,7 +114,9 @@ public class ActivityQueryService implements GetActivityListUseCase, GetActivity
             isHotpick,
             activity.getDescription(),
             members,
-            canViewOpenChat ? activity.getOpenchatUrl() : null
+            canViewOpenChat ? activity.getOpenchatUrl() : null,
+            row.isCreator(),
+            row.isJoined()
         );
     }
 
@@ -157,7 +159,9 @@ public class ActivityQueryService implements GetActivityListUseCase, GetActivity
             row.likeCount(),
             row.schedule(),
             row.thumbnail(),
-            isHotpick
+            isHotpick,
+            row.isCreator(),
+            row.isJoined()
         );
     }
 }
