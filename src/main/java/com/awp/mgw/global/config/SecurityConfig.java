@@ -6,6 +6,7 @@ import com.awp.mgw.global.security.jwt.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -45,6 +46,17 @@ public class SecurityConfig {
   }
 
   @Bean
+  @Order(1)
+  public SecurityFilterChain uploadsSecurityFilterChain(HttpSecurity http) throws Exception {
+    return http
+          .securityMatcher("/mgw/uploads/**")
+          .csrf(csrf -> csrf.disable())
+          .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
+          .build();
+  }
+
+  @Bean
+  @Order(2)
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
     JwtAuthenticationFilter jwtAuthenticationFilter = new JwtAuthenticationFilter(jwtTokenProvider);
 
