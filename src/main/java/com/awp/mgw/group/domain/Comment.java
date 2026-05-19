@@ -1,6 +1,8 @@
 package com.awp.mgw.group.domain;
 
 import com.awp.mgw.common.BaseEntity;
+import com.awp.mgw.group.domain.exception.GroupDomainException;
+import com.awp.mgw.group.domain.exception.GroupErrorCode;
 import com.awp.mgw.member.domain.Member;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -70,5 +72,12 @@ public class Comment extends BaseEntity {
 
     public void detachMember() {
         this.member = null;
+    }
+
+    public void updateContent(String content) {
+        if (content == null || content.isBlank()) {
+            throw new GroupDomainException(GroupErrorCode.INVALID_COMMENT_CONTENT);
+        }
+        this.content = content;
     }
 }

@@ -2,15 +2,18 @@ package com.awp.mgw.group.controller;
 
 import com.awp.mgw.group.controller.dto.request.CreateCommentRequest;
 import com.awp.mgw.group.controller.dto.request.CreateGroupRequest;
+import com.awp.mgw.group.controller.dto.request.UpdateCommentRequest;
 import com.awp.mgw.group.controller.dto.response.CreateCommentResponse;
 import com.awp.mgw.group.controller.dto.response.CreateGroupResponse;
 import com.awp.mgw.group.controller.dto.response.GetGroupDetailResponse;
 import com.awp.mgw.group.controller.dto.response.GetGroupListResponse;
 import com.awp.mgw.group.usecase.command.CreateCommentUseCase;
 import com.awp.mgw.group.usecase.command.CreateGroupUseCase;
+import com.awp.mgw.group.usecase.command.DeleteCommentUseCase;
 import com.awp.mgw.group.usecase.command.DeleteGroupUseCase;
 import com.awp.mgw.group.usecase.command.LeaveGroupUseCase;
 import com.awp.mgw.group.usecase.command.JoinGroupUseCase;
+import com.awp.mgw.group.usecase.command.UpdateCommentUseCase;
 import com.awp.mgw.group.usecase.command.UpdateGroupUseCase;
 import com.awp.mgw.group.usecase.query.GetGroupDetailUseCase;
 import com.awp.mgw.group.usecase.query.GetGroupListUseCase;
@@ -45,6 +48,8 @@ public class GroupController {
     private final JoinGroupUseCase joinGroupUseCase;
     private final DeleteGroupUseCase deleteGroupUseCase;
     private final LeaveGroupUseCase leaveGroupUseCase;
+    private final DeleteCommentUseCase deleteCommentUseCase;
+    private final UpdateCommentUseCase updateCommentUseCase;
     private final GetGroupListUseCase getGroupListUseCase;
     private final GetMyGroupListUseCase getMyGroupListUseCase;
     private final SearchGroupListUseCase searchGroupListUseCase;
@@ -161,6 +166,37 @@ public class GroupController {
             @Valid @RequestBody CreateCommentRequest request
     ) {
         return createCommentUseCase.createComment(memberId, groupId, request);
+    }
+
+    @PutMapping("/{groupId}/comments/{commentId}")
+    @Operation(
+            summary = "댓글 수정",
+            description = "댓글 작성자만 수정할 수 있습니다."
+    )
+    public void updateComment(
+            @AuthenticationPrincipal Long memberId,
+            @Parameter(description = "그룹 ID", example = "10")
+            @PathVariable Long groupId,
+            @Parameter(description = "수정할 댓글 ID", example = "5")
+            @PathVariable Long commentId,
+            @Valid @RequestBody UpdateCommentRequest request
+    ) {
+        updateCommentUseCase.updateComment(memberId, groupId, commentId, request);
+    }
+
+    @DeleteMapping("/{groupId}/comments/{commentId}")
+    @Operation(
+            summary = "댓글 삭제",
+            description = "댓글 작성자만 삭제할 수 있습니다."
+    )
+    public void deleteComment(
+            @AuthenticationPrincipal Long memberId,
+            @Parameter(description = "그룹 ID", example = "10")
+            @PathVariable Long groupId,
+            @Parameter(description = "삭제할 댓글 ID", example = "5")
+            @PathVariable Long commentId
+    ) {
+        deleteCommentUseCase.deleteComment(memberId, groupId, commentId);
     }
 
     @DeleteMapping("/{groupId}")

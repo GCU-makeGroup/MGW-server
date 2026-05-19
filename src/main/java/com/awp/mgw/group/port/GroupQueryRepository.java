@@ -239,8 +239,11 @@ public class GroupQueryRepository {
             return null;
         }
 
-        return Expressions.stringTemplate("replace({0}, ' ', '')", group.name)
+        BooleanExpression nameMatch = Expressions.stringTemplate("replace({0}, ' ', '')", group.name)
                 .containsIgnoreCase(normalizedKeyword);
+        BooleanExpression titleMatch = Expressions.stringTemplate("replace({0}, ' ', '')", group.title)
+                .containsIgnoreCase(normalizedKeyword);
+        return nameMatch.or(titleMatch);
     }
 
     private BooleanExpression accessibleGroup(Long memberId) {
