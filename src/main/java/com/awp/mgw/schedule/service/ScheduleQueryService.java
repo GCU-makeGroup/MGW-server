@@ -2,6 +2,8 @@ package com.awp.mgw.schedule.service;
 
 import com.awp.mgw.activity.port.ActivityQueryRepository;
 import com.awp.mgw.schedule.controller.dto.response.ScheduleDateResponse;
+import com.awp.mgw.schedule.controller.dto.response.ScheduleDetailResponse;
+import com.awp.mgw.schedule.usecase.query.GetDailyScheduleUseCase;
 import com.awp.mgw.schedule.usecase.query.GetMonthlyScheduleUseCase;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -16,7 +18,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class ScheduleQueryService implements GetMonthlyScheduleUseCase {
+public class ScheduleQueryService implements GetMonthlyScheduleUseCase, GetDailyScheduleUseCase {
 
   private final ActivityQueryRepository activityQueryRepository;
 
@@ -40,6 +42,22 @@ public class ScheduleQueryService implements GetMonthlyScheduleUseCase {
 
     return scheduleDates.stream()
           .map(date -> new ScheduleDateResponse(date, true))
+          .toList();
+  }
+
+  @Override
+  public List<ScheduleDetailResponse> getDailySchedules(Long memberId, LocalDate date) {
+    return activityQueryRepository.findActivitiesByDate(memberId, date)
+          .stream()
+          .map(row -> new ScheduleDetailResponse(
+                row.activityId(),
+                row.title(),
+                row.category(),
+                row.location(),
+                row.schedule(),
+                row.capacity(),
+                row.currentParticipants()
+          ))
           .toList();
   }
 }

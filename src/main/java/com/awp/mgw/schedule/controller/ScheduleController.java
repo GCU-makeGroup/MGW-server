@@ -1,10 +1,14 @@
 package com.awp.mgw.schedule.controller;
 
 import com.awp.mgw.schedule.controller.dto.response.ScheduleDateResponse;
+import com.awp.mgw.schedule.controller.dto.response.ScheduleDetailResponse;
+import com.awp.mgw.schedule.usecase.query.GetDailyScheduleUseCase;
 import com.awp.mgw.schedule.usecase.query.GetMonthlyScheduleUseCase;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -12,6 +16,7 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import org.springframework.validation.annotation.Validated;
 
+import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.List;
 
@@ -22,6 +27,7 @@ import java.util.List;
 public class ScheduleController {
 
   private final GetMonthlyScheduleUseCase getMonthlyScheduleUseCase;
+  private final GetDailyScheduleUseCase getDailyScheduleUseCase;
 
   @GetMapping
   public List<ScheduleDateResponse> getMonthlySchedules(
@@ -38,5 +44,13 @@ public class ScheduleController {
           memberId,
           YearMonth.of(year, month)
     );
+  }
+
+  @GetMapping("/{date}")
+  public List<ScheduleDetailResponse> getDailySchedules(
+        @AuthenticationPrincipal Long memberId,
+        @PathVariable @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date
+  ) {
+    return getDailyScheduleUseCase.getDailySchedules(memberId, date);
   }
 }

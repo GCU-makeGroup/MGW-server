@@ -12,6 +12,8 @@ public record ActivitySummaryResponse(
     Long likeCount,
     Instant schedule,
     String thumbnail,
-    Boolean isHotpick
+    Boolean isHotpick,
+    boolean isCreator,
+    boolean isJoined
 ) {
 }

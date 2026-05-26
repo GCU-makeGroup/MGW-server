@@ -16,7 +16,9 @@ public record ActivityDetailResponse(
     Boolean isHotpick,
     String description,
     List<ActivityMemberResponse> members,
-    String openChatUrl
+    String openChatUrl,
+    boolean isCreator,
+    boolean isJoined
 ) {
     public record ActivityMemberResponse(
         Long userId,
