@@ -48,7 +48,7 @@ public class GroupQueryRepository {
                 .select(group.id)
                 .from(group)
                 .leftJoin(group.groupCategories, groupCategory)
-                .where(accessibleGroup(memberId), categoryIdIn(categoryIds))
+                .where(group.isPublic.isTrue(), categoryIdIn(categoryIds))
                 .groupBy(group.id)
                 .orderBy(orderSpecifiers)
                 .offset(pageable.getOffset())
@@ -60,7 +60,7 @@ public class GroupQueryRepository {
                 .select(group.id.countDistinct())
                 .from(group)
                 .leftJoin(group.groupCategories, groupCategory)
-                .where(accessibleGroup(memberId), categoryIdIn(categoryIds))
+                .where(group.isPublic.isTrue(), categoryIdIn(categoryIds))
                 .fetchOne();
 
         if (groupIds.isEmpty()) {
@@ -71,7 +71,7 @@ public class GroupQueryRepository {
         List<Group> groups = queryFactory
                 .selectFrom(group)
                 .distinct()
-                .where(group.id.in(groupIds), accessibleGroup(memberId))
+                .where(group.id.in(groupIds), group.isPublic.isTrue())
                 .orderBy(orderSpecifiers)
                 .fetch();
 
